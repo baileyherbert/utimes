@@ -1,0 +1,56 @@
+{
+	"name": "utimes",
+	"version": "3.0.1",
+	"description": "Change the btime, mtime, and atime of a file.",
+	"main": "src/index.js",
+	"files": [
+		"binding.cc",
+		"binding.gyp",
+		"src/index.js",
+		"src/index.d.ts"
+	],
+	"types": "src/index.d.ts",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/baileyherbert/utimes.git"
+	},
+	"keywords": [
+		"access time",
+		"atime",
+		"birth time",
+		"btime",
+		"created time",
+		"fs",
+		"modified time",
+		"mtime",
+		"utimes"
+	],
+	"author": "Bailey Herbert",
+	"contributors": [
+		{
+			"name": "Joran Dirk Greef",
+			"url": "https://github.com/jorangreef"
+		},
+		{
+			"name": "Jule-",
+			"url": "https://github.com/Jule-"
+		}
+	],
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/baileyherbert/utimes/issues"
+	},
+	"homepage": "https://github.com/baileyherbert/utimes#readme",
+	"scripts": {
+		"install": "node-gyp rebuild",
+		"postinstall": "node-gyp clean",
+		"test": "node src/test.js"
+	},
+	"dependencies": {
+		"node-addon-api": "^2.0.0"
+	},
+	"devDependencies": {
+		"@ronomon/queue": "^3.0.0",
+		"@types/node": "^14.0.13"
+	}
+}
