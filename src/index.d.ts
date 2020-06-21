@@ -14,7 +14,9 @@ export function utimes(path: string, options: TimeOptions): Promise<void>;
  */
 export function utimes(paths: string[], options: TimeOptions): Promise<void>;
 
+export = utimes;
 export default utimes;
+
 export interface TimeOptions {
 	/**
 	 * The birth time in milliseconds.

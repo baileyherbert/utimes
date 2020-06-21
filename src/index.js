@@ -169,7 +169,7 @@ function assertTime(key, value) {
 	}
 }
 
-module.exports = {};
+module.exports = set;
 module.exports.utimes = set;
 module.exports.default = set;
 module.exports.__esModule = true;
