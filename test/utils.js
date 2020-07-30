@@ -33,11 +33,11 @@ function assertFileTimes(filePath, expected) {
 	}
 
 	if (typeof expected.btime !== 'undefined') {
-		assert.equal(actual.btime, expected.btime, getTimeMismatchMessage('atime', actual, expected));
+		assert.equal(actual.btime, expected.btime, getTimeMismatchMessage('btime', actual, expected));
 	}
 
 	if (typeof expected.mtime !== 'undefined') {
-		assert.equal(actual.mtime, expected.mtime, getTimeMismatchMessage('atime', actual, expected));
+		assert.equal(actual.mtime, expected.mtime, getTimeMismatchMessage('mtime', actual, expected));
 	}
 }
 
