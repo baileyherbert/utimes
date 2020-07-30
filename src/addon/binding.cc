@@ -20,36 +20,55 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 	if (flags == 0) return 0;
 
 	#if defined(__APPLE__)
-		struct attrlist attrs;
-		struct timespec times[3];
-		unsigned int index = 0;
+		int err;
+		attrlist retrieveAttrs;
+		FInfoAttrBuf retrieveBuf;
 
-		memset(&attrs, 0, sizeof(struct attrlist));
-		attrs.commonattr = 0;
+		// TODO: Investigate issues setting timestamps when all 3 attributes aren't set simultaneously
+		// Nasty temporary fix:
+		if (flags != 7) {
+
+			memset(&retrieveAttrs, 0, sizeof(retrieveAttrs));
+			retrieveAttrs.bitmapcount = ATTR_BIT_MAP_COUNT;
+			retrieveAttrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
+
+			if (getattrlist(path, &retrieveAttrs, &retrieveBuf, sizeof(retrieveBuf), 0) != 0) {
+				return errno;
+			}
+		}
+
+		attrlist attrs;
+		timespec times[3];
+
+		memset(&attrs, 0, sizeof(attrs));
+		attrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
 		attrs.bitmapcount = ATTR_BIT_MAP_COUNT;
 
 		if (flags & 1) {
-			attrs.commonattr |= ATTR_CMN_CRTIME;
-			times[index].tv_sec = (time_t) (btime / 1000);
-			times[index].tv_nsec = (long) ((btime % 1000) * 1000000);
-			index++;
+			times[0].tv_sec = (time_t) (btime / 1000);
+			times[0].tv_nsec = (long) ((btime % 1000) * 1000000);
+		}
+		else {
+			times[0] = retrieveBuf.crtime;
 		}
 
 		if (flags & 2) {
-			attrs.commonattr |= ATTR_CMN_MODTIME;
-			times[index].tv_sec = (time_t) (mtime / 1000);
-			times[index].tv_nsec = (long) ((mtime % 1000) * 1000000);
-			index++;
+			times[1].tv_sec = (time_t) (mtime / 1000);
+			times[1].tv_nsec = (long) ((mtime % 1000) * 1000000);
+		}
+		else {
+			times[1] = retrieveBuf.modtime;
 		}
 
 		if (flags & 4) {
-			attrs.commonattr |= ATTR_CMN_ACCTIME;
-			times[index].tv_sec = (time_t) (atime / 1000);
-			times[index].tv_nsec = (long) ((atime % 1000) * 1000000);
-			index++;
+			times[2].tv_sec = (time_t) (atime / 1000);
+			times[2].tv_nsec = (long) ((atime % 1000) * 1000000);
+		}
+		else {
+			times[2] = retrieveBuf.acctime;
 		}
 
-		return setattrlist(path, &attrs, &times, index * sizeof(struct timespec), 0);
+		return setattrlist(path, &attrs, &times, 3 * sizeof(struct timespec), 0);
 	#elif defined(_WIN32)
 		int chars = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
 		if (chars == 0) return GetLastError();
