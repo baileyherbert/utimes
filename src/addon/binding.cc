@@ -5,13 +5,6 @@
 #if defined(__APPLE__)
 	#include <sys/attr.h>
 	#include <unistd.h>
-
-	struct FileTimeAttrs {
-		long length;
-		struct timespec crtime;
-		struct timespec modtime;
-		struct timespec acctime;
-	};
 #elif defined(_WIN32)
 	#include <io.h>
 	#include <windows.h>
@@ -27,61 +20,35 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 	if (flags == 0) return 0;
 
 	#if defined(__APPLE__)
-		attrlist retrieveAttrs;
-		struct FileTimeAttrs retrieveBuf;
+		struct attrlist attrs;
+		struct timespec times[3];
+		unsigned int index = 0;
 
-		// TODO: Investigate issues setting timestamps when all 3 attributes aren't set simultaneously
-		// Nasty temporary fix:
-		if (flags < 7) {
-			memset(&retrieveAttrs, 0, sizeof(retrieveAttrs));
-			retrieveAttrs.bitmapcount = ATTR_BIT_MAP_COUNT;
-			retrieveAttrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
-
-			if (getattrlist(path, &retrieveAttrs, &retrieveBuf, sizeof(retrieveBuf), 0) != 0) {
-				return errno;
-			}
-
-			return retrieveBuf.crtime.tv_sec;
-		}
-		else {
-			return -3;
-		}
-
-		attrlist attrs;
-		timespec times[3];
-
-		memset(&attrs, 0, sizeof(attrs));
-		attrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
+		memset(&attrs, 0, sizeof(struct attrlist));
 		attrs.bitmapcount = ATTR_BIT_MAP_COUNT;
 
 		if (flags & 1) {
-			times[0].tv_sec = (time_t) (btime / 1000);
-			times[0].tv_nsec = (long) ((btime % 1000) * 1000000);
-		}
-		else {
-			times[0].tv_sec = retrieveBuf.crtime.tv_sec;
-			times[0].tv_nsec = retrieveBuf.crtime.tv_nsec;
+			attrs.commonattr |= ATTR_CMN_CRTIME;
+			times[index].tv_sec = (time_t) (btime / 1000);
+			times[index].tv_nsec = (long) ((btime % 1000) * 1000000);
+			index++;
 		}
 
 		if (flags & 2) {
-			times[1].tv_sec = (time_t) (mtime / 1000);
-			times[1].tv_nsec = (long) ((mtime % 1000) * 1000000);
-		}
-		else {
-			times[1].tv_sec = retrieveBuf.modtime.tv_sec;
-			times[1].tv_nsec = retrieveBuf.modtime.tv_nsec;
+			attrs.commonattr |= ATTR_CMN_MODTIME;
+			times[index].tv_sec = (time_t) (mtime / 1000);
+			times[index].tv_nsec = (long) ((mtime % 1000) * 1000000);
+			index++;
 		}
 
 		if (flags & 4) {
-			times[2].tv_sec = (time_t) (atime / 1000);
-			times[2].tv_nsec = (long) ((atime % 1000) * 1000000);
-		}
-		else {
-			times[2].tv_sec = retrieveBuf.acctime.tv_sec;
-			times[2].tv_nsec = retrieveBuf.acctime.tv_nsec;
+			attrs.commonattr |= ATTR_CMN_ACCTIME;
+			times[index].tv_sec = (time_t) (atime / 1000);
+			times[index].tv_nsec = (long) ((atime % 1000) * 1000000);
+			index++;
 		}
 
-		return setattrlist(path, &attrs, &times, 3 * sizeof(struct timespec), 0);
+		return setattrlist(path, &attrs, times, index * sizeof(struct timespec), 0);
 	#elif defined(_WIN32)
 		int chars = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
 		if (chars == 0) return GetLastError();
