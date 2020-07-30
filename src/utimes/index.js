@@ -38,7 +38,7 @@ async function set(paths, options) {
 
 				if (times.atime === 0) transformed.atime = stats.atime.getTime();
 				if (times.mtime === 0) transformed.mtime = stats.mtime.getTime();
-				if (times.btime === 0) transformed.btime = stats.btime.getTime();
+				if (times.btime === 0) transformed.btime = stats.birthtime.getTime();
 			}
 
 			await callBinding(target, transformed, 7);
