@@ -54,8 +54,8 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			times[0].tv_nsec = (long) ((btime % 1000) * 1000000);
 		}
 		else {
-			times[0].tv_sec = retrieveBuf.crtime.tv_sec;
-			times[0].tv_nsec = retrieveBuf.crtime.tv_nsec;
+			times[0].tv_sec = 1; //retrieveBuf.crtime.tv_sec;
+			times[0].tv_nsec = 0; //retrieveBuf.crtime.tv_nsec;
 		}
 
 		if (flags & 2) {
