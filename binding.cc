@@ -163,7 +163,7 @@ void utimes(const Napi::CallbackInfo& info) {
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
 	exports.Set(
 		Napi::String::New(env, "utimes"),
-		Napi::Function::New(env, utimes, "utimes")
+		Napi::Function::New<utimes>(env)
 	);
 	return exports;
 }
