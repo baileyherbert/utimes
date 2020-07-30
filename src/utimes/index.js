@@ -26,6 +26,7 @@ async function set(paths, options) {
 	for (const target of targets) {
 		// On Win32 and Darwin, use the binding to set the times
 		if (process.platform === 'win32' || process.platform === 'darwin') {
+			console.log('times:', times, 'flags:', flags);
 			await callBinding(target, times, flags);
 		}
 

@@ -113,7 +113,7 @@ async function testSetTimes(filePath, times) {
 	const now = getFileTimes(filePath);
 	const expected = mergeTimes(now, times);
 
-	await utimes(filePath, expected);
+	await utimes(filePath, times);
 	assertFileTimes(filePath, expected);
 }
 

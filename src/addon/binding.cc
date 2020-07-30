@@ -25,6 +25,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 		unsigned int index = 0;
 
 		memset(&attrs, 0, sizeof(struct attrlist));
+		attrs.commonattr = 0;
 		attrs.bitmapcount = ATTR_BIT_MAP_COUNT;
 
 		if (flags & 1) {
@@ -48,7 +49,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			index++;
 		}
 
-		return setattrlist(path, &attrs, times, index * sizeof(struct timespec), 0);
+		return setattrlist(path, &attrs, &times, index * sizeof(struct timespec), 0);
 	#elif defined(_WIN32)
 		int chars = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
 		if (chars == 0) return GetLastError();
