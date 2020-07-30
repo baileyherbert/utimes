@@ -129,6 +129,7 @@ function getFlags(options) {
  * @param { number } flags
  */
 async function callBinding(path, times, flags) {
+	console.log('->', path, times, flags);
 	return new Promise((resolve, reject) => {
 		binding.utimes(pathBuffer(path), flags, times.btime, times.mtime, times.atime, result => {
 			if (result !== 0) {
