@@ -32,7 +32,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 
 		// TODO: Investigate issues setting timestamps when all 3 attributes aren't set simultaneously
 		// Nasty temporary fix:
-		if (flags != 7) {
+		if (flags < 7) {
 			memset(&retrieveAttrs, 0, sizeof(retrieveAttrs));
 			retrieveAttrs.bitmapcount = ATTR_BIT_MAP_COUNT;
 			retrieveAttrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
@@ -40,6 +40,11 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			if (getattrlist(path, &retrieveAttrs, &retrieveBuf, sizeof(retrieveBuf), 0) != 0) {
 				return errno;
 			}
+
+			return retrieveBuf.crtime.tv_sec;
+		}
+		else {
+			return -3;
 		}
 
 		attrlist attrs;
@@ -54,8 +59,8 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			times[0].tv_nsec = (long) ((btime % 1000) * 1000000);
 		}
 		else {
-			times[0].tv_sec = 1; //retrieveBuf.crtime.tv_sec;
-			times[0].tv_nsec = 0; //retrieveBuf.crtime.tv_nsec;
+			times[0].tv_sec = retrieveBuf.crtime.tv_sec;
+			times[0].tv_nsec = retrieveBuf.crtime.tv_nsec;
 		}
 
 		if (flags & 2) {
