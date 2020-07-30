@@ -1,0 +1,12 @@
+language: node_js
+cache: yarn
+node_js:
+  - "9"
+  - "12"
+  - "14"
+before_script:
+  - yarn --production
+os:
+  - linux
+  - osx
+  - windows
