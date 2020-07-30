@@ -54,7 +54,8 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			times[0].tv_nsec = (long) ((btime % 1000) * 1000000);
 		}
 		else {
-			times[0] = retrieveBuf.crtime;
+			times[0].tv_sec = retrieveBuf.crtime.tv_sec;
+			times[0].tv_nsec = retrieveBuf.crtime.tv_nsec;
 		}
 
 		if (flags & 2) {
@@ -62,7 +63,8 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			times[1].tv_nsec = (long) ((mtime % 1000) * 1000000);
 		}
 		else {
-			times[1] = retrieveBuf.modtime;
+			times[1].tv_sec = retrieveBuf.modtime.tv_sec;
+			times[1].tv_nsec = retrieveBuf.modtime.tv_nsec;
 		}
 
 		if (flags & 4) {
@@ -70,7 +72,8 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			times[2].tv_nsec = (long) ((atime % 1000) * 1000000);
 		}
 		else {
-			times[2] = retrieveBuf.acctime;
+			times[2].tv_sec = retrieveBuf.acctime.tv_sec;
+			times[2].tv_nsec = retrieveBuf.acctime.tv_nsec;
 		}
 
 		return setattrlist(path, &attrs, &times, 3 * sizeof(struct timespec), 0);
