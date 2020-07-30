@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const binding = require('../binding.node');
+const binding = require('../../binding.node');
 
 const utimes = util.promisify(fs.utimes);
 const stat = util.promisify(fs.stat);

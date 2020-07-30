@@ -2,14 +2,14 @@
 	"name": "utimes",
 	"version": "3.0.4",
 	"description": "Change the btime, mtime, and atime of a file.",
-	"main": "src/index.js",
+	"main": "src/utimes/index.js",
 	"files": [
-		"binding.cc",
 		"binding.gyp",
-		"src/index.js",
-		"src/index.d.ts"
+		"src/utimes/index.js",
+		"src/utimes/index.d.ts",
+		"src/addon/binding.cc"
 	],
-	"types": "src/index.d.ts",
+	"types": "src/utimes/index.d.ts",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/baileyherbert/utimes.git"
@@ -44,13 +44,12 @@
 	"scripts": {
 		"install": "node-gyp rebuild",
 		"postinstall": "node-gyp clean",
-		"test": "node src/test.js"
+		"test": "mocha"
 	},
 	"dependencies": {
 		"node-addon-api": "^3.0.0"
 	},
 	"devDependencies": {
-		"@ronomon/queue": "^3.0.0",
-		"@types/node": "^14.0.13"
+		"mocha": "^8.0.1"
 	}
 }
