@@ -55,6 +55,16 @@ describe('File', function() {
 		await utils.testSetTimes(filePath, { btime: 447775200000 });
 		await utils.testSetTimes(filePath, { btime: 946684800000 });
 	});
+
+	it('Can change two times at once', async function() {
+		await utils.testSetTimes(filePath, { mtime: 223887600000, atime: 223888600000 });
+		await utils.testSetTimes(filePath, { mtime: 323887600000, atime: 323888600000 });
+	});
+
+	it('Can change all times at once', async function() {
+		await utils.testSetTimes(filePath, { mtime: 447775200000, atime: 447776200000, btime: 447777200000 });
+		await utils.testSetTimes(filePath, { mtime: 946684800000, atime: 946685800000, btime: 946686800000 });
+	});
 });
 
 // Test on a directory
@@ -90,5 +100,15 @@ describe('Directory', function() {
 
 		await utils.testSetTimes(dirPath, { btime: 447775200000 });
 		await utils.testSetTimes(dirPath, { btime: 946684800000 });
+	});
+
+	it('Can change two times at once', async function() {
+		await utils.testSetTimes(dirPath, { mtime: 223887600000, atime: 223888600000 });
+		await utils.testSetTimes(dirPath, { mtime: 323887600000, atime: 323888600000 });
+	});
+
+	it('Can change all times at once', async function() {
+		await utils.testSetTimes(dirPath, { mtime: 447775200000, atime: 447776200000, btime: 447777200000 });
+		await utils.testSetTimes(dirPath, { mtime: 946684800000, atime: 946685800000, btime: 946686800000 });
 	});
 });
