@@ -29,15 +29,15 @@ function assertFileTimes(filePath, expected) {
 	const actual = getFileTimes(filePath);
 
 	if (typeof expected.atime !== 'undefined') {
-		assert.equal(actual.atime, expected.atime);
+		assert.equal(actual.atime, expected.atime, getTimeMismatchMessage('atime', actual, expected));
 	}
 
 	if (typeof expected.btime !== 'undefined') {
-		assert.equal(actual.btime, expected.btime);
+		assert.equal(actual.btime, expected.btime, getTimeMismatchMessage('atime', actual, expected));
 	}
 
 	if (typeof expected.mtime !== 'undefined') {
-		assert.equal(actual.mtime, expected.mtime);
+		assert.equal(actual.mtime, expected.mtime, getTimeMismatchMessage('atime', actual, expected));
 	}
 }
 
@@ -65,10 +65,12 @@ function assertFileTimesLoosely(filePath, expected, margin = 10) {
  * @param {any} expected
  */
 function getTimeMismatchMessage(name, actual, expected) {
-	const expectedValue = expected[name];
-	const actualValue = actual[name];
-
-	return util.format('Incorrect timestamp for %s, expected %d, got %d', name, expectedValue, actualValue);
+	return util.format(
+		'Incorrect timestamp for %s, expected %s, got %s',
+		name,
+		JSON.stringify(expected),
+		JSON.stringify(actual)
+	);
 }
 
 /**
