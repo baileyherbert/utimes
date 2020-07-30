@@ -1,6 +1,6 @@
 {
 	"name": "utimes",
-	"version": "3.0.3",
+	"version": "3.0.4",
 	"description": "Change the btime, mtime, and atime of a file.",
 	"main": "src/index.js",
 	"files": [
