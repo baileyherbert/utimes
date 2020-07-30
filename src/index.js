@@ -39,7 +39,7 @@ async function set(paths, options) {
 		else {
 			const stats = await stat(target);
 			const mtime = stats.mtime.getTime();
-			await utimes(path, times.atime / 1000, mtime / 1000);
+			await utimes(target, times.atime / 1000, mtime / 1000);
 		}
 	}
 }
