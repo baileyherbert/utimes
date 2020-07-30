@@ -31,7 +31,7 @@ async function set(paths, options) {
 
 		// On Linux, set mtime with the fs library (atime must be set as well)
 		else if (flags & 2) {
-			const atime = flags & 4 ? times.atime : times.mtime;
+			const atime = flags & 4 ? times.atime : (await stat(target)).atime.getTime();
 			await utimes(target, atime / 1000, times.mtime / 1000);
 		}
 
