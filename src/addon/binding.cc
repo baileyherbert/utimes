@@ -22,12 +22,12 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 	#if defined(__APPLE__)
 		int err;
 		attrlist retrieveAttrs;
-> +    struct {
-> +        long ssize;
-> +        struct timespec crtime;
-> +        struct timespec modtime;
-> +        struct timespec acctime;
-> +    } retrieveBuf;
+		struct {
+			long ssize;
+			struct timespec crtime;
+			struct timespec modtime;
+			struct timespec acctime;
+		} retrieveBuf;
 
 		// TODO: Investigate issues setting timestamps when all 3 attributes aren't set simultaneously
 		// Nasty temporary fix:
