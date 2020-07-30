@@ -32,12 +32,12 @@ function assertFileTimes(filePath, expected) {
 		assert.equal(actual.atime, expected.atime, getTimeMismatchMessage('atime', actual, expected));
 	}
 
-	if (typeof expected.btime !== 'undefined') {
-		assert.equal(actual.btime, expected.btime, getTimeMismatchMessage('atime', actual, expected));
+	if (typeof expected.btime !== 'undefined' && process.platform !== 'linux') {
+		assert.equal(actual.btime, expected.btime, getTimeMismatchMessage('btime', actual, expected));
 	}
 
 	if (typeof expected.mtime !== 'undefined') {
-		assert.equal(actual.mtime, expected.mtime, getTimeMismatchMessage('atime', actual, expected));
+		assert.equal(actual.mtime, expected.mtime, getTimeMismatchMessage('mtime', actual, expected));
 	}
 }
 
@@ -53,8 +53,11 @@ function assertFileTimesLoosely(filePath, expected, margin = 10) {
 	const diff = (a, b) => Math.abs(a - b);
 
 	assert(diff(actual.atime, expected.atime) <= margin, getTimeMismatchMessage('atime', actual, expected));
-	assert(diff(actual.btime, expected.btime) <= margin, getTimeMismatchMessage('btime', actual, expected));
 	assert(diff(actual.mtime, expected.mtime) <= margin, getTimeMismatchMessage('mtime', actual, expected));
+
+	if (process.platform !== 'linux') {
+		assert(diff(actual.btime, expected.btime) <= margin, getTimeMismatchMessage('btime', actual, expected));
+	}
 }
 
 /**
