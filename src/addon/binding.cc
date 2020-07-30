@@ -7,7 +7,7 @@
 	#include <unistd.h>
 
 	struct FileTimeAttrs {
-		uint32 length;
+		long length;
 		struct timespec crtime;
 		struct timespec modtime;
 		struct timespec acctime;
@@ -54,7 +54,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			times[0].tv_nsec = (long) ((btime % 1000) * 1000000);
 		}
 		else {
-			times[0] = retrieveBuf[0];
+			times[0] = retrieveBuf.crtime;
 		}
 
 		if (flags & 2) {
@@ -62,7 +62,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			times[1].tv_nsec = (long) ((mtime % 1000) * 1000000);
 		}
 		else {
-			times[1] = retrieveBuf[1];
+			times[1] = retrieveBuf.modtime;
 		}
 
 		if (flags & 4) {
@@ -70,7 +70,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			times[2].tv_nsec = (long) ((atime % 1000) * 1000000);
 		}
 		else {
-			times[2] = retrieveBuf[2];
+			times[2] = retrieveBuf.acctime;
 		}
 
 		return setattrlist(path, &attrs, &times, 3 * sizeof(struct timespec), 0);
