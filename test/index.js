@@ -24,23 +24,16 @@ const dirPath = path.join(tempDir, 'temp-dir');
 
 // Test on a file
 describe('File', function() {
-	let createTime;
-
 	before(function() {
 		if (fs.existsSync(filePath)) {
 			fs.unlinkSync(filePath);
 		}
 
-		createTime = utils.getNow();
 		fs.writeFileSync(filePath, 'Hello!');
 	})
 
 	after(function() {
 		fs.unlinkSync(filePath);
-	});
-
-	it('Has default timestamps', function() {
-		utils.assertFileTimesLoosely(filePath, createTime);
 	});
 
 	it('Can change atime', async function() {
@@ -66,8 +59,6 @@ describe('File', function() {
 
 // Test on a directory
 describe('Directory', function() {
-	let createTime;
-
 	before(function() {
 		if (fs.existsSync(dirPath)) {
 			fs.rmdirSync(dirPath);
@@ -79,10 +70,6 @@ describe('Directory', function() {
 
 	after(async function() {
 		fs.rmdirSync(dirPath);
-	});
-
-	it('Has default timestamps', function() {
-		utils.assertFileTimesLoosely(dirPath, createTime);
 	});
 
 	it('Can change atime', async function() {
