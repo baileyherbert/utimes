@@ -5,6 +5,13 @@
 #if defined(__APPLE__)
 	#include <sys/attr.h>
 	#include <unistd.h>
+
+	struct FileTimeAttrs {
+		uint32 length;
+		struct timespec crtime;
+		struct timespec modtime;
+		struct timespec acctime;
+	};
 #elif defined(_WIN32)
 	#include <io.h>
 	#include <windows.h>
@@ -21,12 +28,11 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 
 	#if defined(__APPLE__)
 		attrlist retrieveAttrs;
-		timespec retrieveBuf[3];
+		struct FileTimeAttrs retrieveBuf;
 
 		// TODO: Investigate issues setting timestamps when all 3 attributes aren't set simultaneously
 		// Nasty temporary fix:
 		if (flags != 7) {
-
 			memset(&retrieveAttrs, 0, sizeof(retrieveAttrs));
 			retrieveAttrs.bitmapcount = ATTR_BIT_MAP_COUNT;
 			retrieveAttrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
