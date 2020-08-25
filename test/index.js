@@ -1,4 +1,4 @@
-const utimes = require('../src/utimes');
+const { utimes } = require('../src/utimes');
 const assert = require('assert');
 const utils = require('./utils');
 

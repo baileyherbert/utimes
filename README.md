@@ -3,7 +3,7 @@
 Change the `btime`, `mtime`, and `atime` of files on Windows, macOS and Linux.
 
 ```ts
-import utimes from 'utimes';
+import { utimes } from 'utimes';
 
 utimes('/path/to/file', {
 	btime: 447775200000 // 1984-03-10T14:00:00.000Z
@@ -12,25 +12,29 @@ utimes('/path/to/file', {
 
 ## Installation
 
+Install with either `npm` or `yarn`:
+
 ```
 npm install utimes
+yarn add utimes
 ```
 
 ## Usage
 
-The library exports a function called `utimes` (also accessible as a default export):
+The library exports a function called `utimes`:
 
 ```ts
-function utimes(path, options): Promise<void>
+function utimes(path: string, options: TimeOptions): Promise<void>;
+function utimes(paths: string[], options: TimeOptions): Promise<void>;
 ```
 
 The `options` parameter is an object containing any of the following times, which should be passed as Unix millisecond timestamps:
 
-- `btime`
-- `mtime`
-- `atime`
+- `btime` – Birth (creation) time
+- `mtime` – Modification time
+- `atime` – Access time
 
-If any of these properties are `undefined`, they will not be changed on the file.
+If any of these properties are `undefined`, `null`, or `0`, they will not be changed on the file.
 
 ## Caveats
 

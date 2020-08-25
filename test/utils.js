@@ -1,7 +1,7 @@
 const fs = require('fs');
 const assert = require('assert');
 const util = require('util');
-const utimes = require('../src/utimes');
+const { utimes } = require('../src/utimes');
 
 /**
  * Returns the timestamps for the given file.

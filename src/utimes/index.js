@@ -5,7 +5,7 @@ const path = require('path');
 const util = require('util');
 const binding = require('../../binding.node');
 
-const utimes = util.promisify(fs.utimes);
+const utimesFs = util.promisify(fs.utimes);
 const stat = util.promisify(fs.stat);
 
 /**
@@ -14,7 +14,7 @@ const stat = util.promisify(fs.stat);
  * @param { string|string[] } paths The path(s) to modify.
  * @param {{ btime: number, mtime: number, atime: number }} options The times to set on the path(s).
  */
-async function set(paths, options) {
+async function utimes(paths, options) {
 	const targets = normalizePaths(paths);
 	const times = getFullOptions(options);
 	const flags = getFlags(times);
@@ -47,14 +47,14 @@ async function set(paths, options) {
 		// On Linux, set mtime with the fs library (atime must be set as well)
 		else if (flags & 2) {
 			const atime = flags & 4 ? times.atime : (await stat(target)).atime.getTime();
-			await utimes(target, atime / 1000, times.mtime / 1000);
+			await utimesFs(target, atime / 1000, times.mtime / 1000);
 		}
 
 		// On Linux, set atime without changing mtime
 		else {
 			const stats = await stat(target);
 			const mtime = stats.mtime.getTime();
-			await utimes(target, times.atime / 1000, mtime / 1000);
+			await utimesFs(target, times.atime / 1000, mtime / 1000);
 		}
 	}
 }
@@ -184,7 +184,6 @@ function assertTime(key, value) {
 	}
 }
 
-module.exports = set;
-module.exports.utimes = set;
-module.exports.default = set;
-module.exports.__esModule = true;
+module.exports = {
+	utimes: utimes
+};
