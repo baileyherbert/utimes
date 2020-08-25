@@ -80,7 +80,7 @@ function normalizePaths(paths) {
 		return paths;
 	}
 
-	throw Error('path must be a string or array');
+	throw new Error('path must be a string or array');
 }
 
 /**
