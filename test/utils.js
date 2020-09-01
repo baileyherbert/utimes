@@ -95,10 +95,18 @@ function getNow() {
  * Returns the current timestamp as an object with `btime`, `mtime`, and `atime`.
  *
  * @param {{ btime?: number, mtime?: number, atime?: number }} a
- * @param {{ btime?: number, mtime?: number, atime?: number }} b
+ * @param {{ btime?: number, mtime?: number, atime?: number } | number} b
  * @returns {{ btime?: number, mtime?: number, atime?: number }}
  */
 function mergeTimes(a, b) {
+	if (typeof b === 'number') {
+		b = {
+			mtime: b,
+			atime: b,
+			btime: b
+		};
+	}
+
 	return Object.assign(a, b);
 }
 
@@ -106,7 +114,7 @@ function mergeTimes(a, b) {
  * Returns the current timestamp as an object with `btime`, `mtime`, and `atime`.
  *
  * @param {string} filePath
- * @param {{ btime?: number, mtime?: number, atime?: number }} times
+ * @param {{ btime?: number, mtime?: number, atime?: number } | number} times
  * @returns {Promise<void>}
  */
 async function testSetTimes(filePath, times) {

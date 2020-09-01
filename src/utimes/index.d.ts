@@ -18,7 +18,7 @@ declare namespace utimes {
 	/**
 	 * Options for choosing which timestamps to set on files.
 	 */
-	export interface TimeOptions {
+	export type TimeOptions = number | {
 		/**
 		 * The birth time in milliseconds.
 		 */

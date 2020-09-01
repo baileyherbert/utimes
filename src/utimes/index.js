@@ -12,7 +12,7 @@ const stat = util.promisify(fs.stat);
  * Sets the times on the specified path(s).
  *
  * @param { string|string[] } paths The path(s) to modify.
- * @param {{ btime: number, mtime: number, atime: number }} options The times to set on the path(s).
+ * @param {{ btime: number, mtime: number, atime: number } | number} options The times to set on the path(s).
  */
 async function utimes(paths, options) {
 	const targets = normalizePaths(paths);
@@ -87,9 +87,17 @@ function normalizePaths(paths) {
  * Replaces missing options with zero values.
  *
  * @param { * } options
- * @returns {{ btime: number, mtime: number, atime: number }}
+ * @returns {{ btime: number, mtime: number, atime: number } | number}
  */
 function getFullOptions(options) {
+	if (typeof options === 'number') {
+		options = {
+			btime: options,
+			mtime: options,
+			atime: options
+		};
+	}
+
 	if (typeof options !== 'object') {
 		throw new Error('options must be an object');
 	}

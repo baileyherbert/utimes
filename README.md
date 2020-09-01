@@ -28,13 +28,23 @@ function utimes(path: string, options: TimeOptions): Promise<void>;
 function utimes(paths: string[], options: TimeOptions): Promise<void>;
 ```
 
-The `options` parameter is an object containing any of the following times, which should be passed as Unix millisecond timestamps:
+You can set individual timestamps on the file(s) by passing an object as the `options` parameter, containing the `btime`, `mtime`, and `atime` as unix millisecond timestamps.
 
-- `btime` – Birth (creation) time
-- `mtime` – Modification time
-- `atime` – Access time
+If any of these timestamps are not specified in the object, or if they are set to `0`, `undefined`, or `null`, then the existing timestamps on the file(s) will be preserved.
 
-If any of these properties are `undefined`, `null`, or `0`, they will not be changed on the file.
+```ts
+utimes('/path/to/file', {
+	btime: 447775200000,
+	atime: 447775200000,
+	mtime: 444328600000
+});
+```
+
+If you need to set all three timestamps to the same value, pass a single timestamp as the `options` parameter. Passing `0` as the value will prevent any changes to the file(s).
+
+```ts
+utimes('/path/to/file', 447775200000);
+```
 
 ## Caveats
 
