@@ -28,7 +28,7 @@ function utimes(path: string, options: TimeOptions): Promise<void>;
 function utimes(paths: string[], options: TimeOptions): Promise<void>;
 ```
 
-Set timestamps on the file(s) by passing an object containing the `btime`, `mtime`, and `atime` as unix millisecond timestamps. If any of these properties are set to `undefined`, `null`, or `0`, then the existing timestamps will be preserved.
+Set timestamps on the file(s) by passing an object with the `btime`, `mtime`, and `atime` as unix millisecond timestamps. If any of these properties are set to `undefined`, `null`, or `0`, then the existing timestamps will be preserved.
 
 ```ts
 utimes('/path/to/file', {
@@ -38,7 +38,7 @@ utimes('/path/to/file', {
 });
 ```
 
-To set all three timestamps to the same value, pass a single millisecond timestamp. Passing `0` will immediately return without making any changes to the file.
+Set all three timestamps to the same value by passing a single millisecond timestamp. Passing `0` will immediately return without making any changes to the file.
 
 ```ts
 utimes('/path/to/file', 447775200000);
