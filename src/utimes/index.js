@@ -23,6 +23,10 @@ async function utimes(paths, options) {
 		return;
 	}
 
+	if (times.atime === 0 && times.btime === 0 && times.mtime === 0) {
+		return;
+	}
+
 	for (const target of targets) {
 		// On Win32 and Darwin, use the binding to set the times
 		if (process.platform === 'win32') {
