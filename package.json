@@ -40,7 +40,6 @@
 	"bugs": {
 		"url": "https://github.com/baileyherbert/utimes/issues"
 	},
-	"homepage": "https://github.com/baileyherbert/utimes#readme",
 	"scripts": {
 		"install": "node-gyp rebuild",
 		"postinstall": "node-gyp clean",
