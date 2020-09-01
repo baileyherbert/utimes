@@ -28,9 +28,7 @@ function utimes(path: string, options: TimeOptions): Promise<void>;
 function utimes(paths: string[], options: TimeOptions): Promise<void>;
 ```
 
-You can set individual timestamps on the file(s) by passing an object as the `options` parameter, containing the `btime`, `mtime`, and `atime` as unix millisecond timestamps.
-
-If any of these timestamps are not specified in the object, or if they are set to `0`, `undefined`, or `null`, then the existing timestamps on the file(s) will be preserved.
+Set timestamps on the file(s) by passing an object containing the `btime`, `mtime`, and `atime` as unix millisecond timestamps. If any of these properties are set to `undefined`, `null`, or `0`, then the existing timestamps will be preserved.
 
 ```ts
 utimes('/path/to/file', {
@@ -40,7 +38,7 @@ utimes('/path/to/file', {
 });
 ```
 
-If you need to set all three timestamps to the same value, pass a single timestamp as the `options` parameter. Passing `0` as the value will prevent any changes to the file(s).
+To set all three timestamps to the same value, pass a single millisecond timestamp. Passing `0` will immediately return without making any changes to the file.
 
 ```ts
 utimes('/path/to/file', 447775200000);
@@ -48,9 +46,9 @@ utimes('/path/to/file', 447775200000);
 
 ## Caveats
 
-- Linux does not support setting the `btime` timestamp.
+- Linux does not support setting the `btime` timestamp – attempts to do so will be silently ignored.
 - File descriptors are not supported.
 
 ## Credits
 
-This is a fork of [@ronomon/utimes](https://www.npmjs.com/package/@ronomon/utimes) with compatibility changes by [Jule-](https://github.com/Jule-) to support modern versions of Node.js. It's not backwards-compatible, as I have modernized the API a bit.
+This is a fork of [@ronomon/utimes](https://www.npmjs.com/package/@ronomon/utimes) with compatibility changes by [Jule-](https://github.com/Jule-) to support modern versions of Node.js. It's not backwards-compatible.
