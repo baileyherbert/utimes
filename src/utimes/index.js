@@ -3,7 +3,15 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const binding = require('../../binding.node');
+
+const gyp = require('node-pre-gyp');
+const bindingPath = gyp.find(path.resolve(path.join(__dirname, '../../package.json')));
+
+if (!fs.existsSync(bindingPath)) {
+	throw new Error('Could not find the "utimes" binary, have you run npm install?');
+}
+
+const binding = require(bindingPath);
 
 const utimesFs = util.promisify(fs.utimes);
 const stat = util.promisify(fs.stat);

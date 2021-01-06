@@ -3,3 +3,4 @@ binding.node
 build
 node_modules
 utimes_fixtures
+lib

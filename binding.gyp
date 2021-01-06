@@ -1,7 +1,7 @@
 {
 	"targets": [
 		{
-			"target_name": "binding",
+			"target_name": "utimes",
 			"cflags!": [
 				"-fno-exceptions"
 			],
@@ -48,14 +48,12 @@
 			},
 			"type": "none",
 			"dependencies": [
-				"binding"
+				"<(module_name)"
 			],
 			"copies": [
 				{
-					'destination': '<(module_root_dir)',
-					'files': [
-						'<(module_root_dir)/build/Release/binding.node'
-					]
+					'files': ['<(PRODUCT_DIR)/<(module_name).node'],
+					'destination': '<(module_path)',
 				}
 			]
 		}
