@@ -11,6 +11,7 @@ node_js:
   - "13"
   - "14"
   - "15"
+  - "16"
 
 before_install:
   - export COMMIT_MESSAGE=$(git log --format=%B --no-merges -n 1 | tr -d '\n')
