@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 
-const gyp = require('node-pre-gyp');
+const gyp = require('@mapbox/node-pre-gyp');
 const bindingPath = gyp.find(path.resolve(path.join(__dirname, '../../package.json')));
 
 if (!fs.existsSync(bindingPath)) {
