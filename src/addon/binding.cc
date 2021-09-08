@@ -5,6 +5,9 @@
 #if defined(__APPLE__)
 	#include <sys/attr.h>
 	#include <unistd.h>
+#elif defined(__linux__)
+	#include <sys/stat.h>
+	#include <fcntl.h>
 #elif defined(_WIN32)
 	#include <io.h>
 	#include <windows.h>
@@ -13,6 +16,13 @@
 		int64_t temp = (int64_t) ((time * 10000ULL) + 116444736000000000ULL);
 		(filetime)->dwLowDateTime = (DWORD) (temp & 0xFFFFFFFF);
 		(filetime)->dwHighDateTime = (DWORD) (temp >> 32);
+	}
+#endif
+
+#if defined(__APPLE__) || defined(__linux__)
+	inline void set_timespec(uint64_t time, timespec* out) {
+		(out)->tv_sec = (time_t) (time / 1000);
+		(out)->tv_nsec = (long) ((time % 1000) * 1000000);
 	}
 #endif
 
@@ -29,26 +39,38 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 
 		if (flags & 1) {
 			attrs.commonattr |= ATTR_CMN_CRTIME;
-			times[index].tv_sec = (time_t) (btime / 1000);
-			times[index].tv_nsec = (long) ((btime % 1000) * 1000000);
+			set_timespec(btime, &(times[index]));
 			index++;
 		}
 
 		if (flags & 2) {
 			attrs.commonattr |= ATTR_CMN_MODTIME;
-			times[index].tv_sec = (time_t) (mtime / 1000);
-			times[index].tv_nsec = (long) ((mtime % 1000) * 1000000);
+			set_timespec(mtime, &(times[index]));
 			index++;
 		}
 
 		if (flags & 4) {
 			attrs.commonattr |= ATTR_CMN_ACCTIME;
-			times[index].tv_sec = (time_t) (atime / 1000);
-			times[index].tv_nsec = (long) ((atime % 1000) * 1000000);
+			set_timespec(atime, &(times[index]));
 			index++;
 		}
 
 		return setattrlist(path, &attrs, times, index * sizeof(struct timespec), 0);
+	#elif defined(__linux__)
+		struct timespec ts[2];
+		if (flags & 4) {
+			set_timespec(atime, &(ts[0]));
+		} else {
+			ts[0].tv_nsec = UTIME_OMIT;
+		}
+
+		if (flags & 2) {
+			set_timespec(mtime, &(ts[1]));
+		} else {
+			ts[1].tv_nsec = UTIME_OMIT;
+		}
+
+		return utimensat(AT_FDCWD, path, ts, 0);
 	#elif defined(_WIN32)
 		int chars = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
 		if (chars == 0) return GetLastError();
