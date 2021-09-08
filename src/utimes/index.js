@@ -8,7 +8,7 @@ const gyp = require('@mapbox/node-pre-gyp');
 const bindingPath = gyp.find(path.resolve(path.join(__dirname, '../../package.json')));
 
 if (!fs.existsSync(bindingPath)) {
-	throw new Error('Could not find the "utimes" binary, have you run npm install?');
+	throw new Error('Could not find the "utimes.node" file. See: https://github.com/baileyherbert/utimes/issues/12');
 }
 
 const binding = require(bindingPath);
