@@ -36,8 +36,8 @@ async function utimes(paths, options) {
 	}
 
 	for (const target of targets) {
-		// On Win32 and Darwin, use the binding to set the times
-		if (process.platform === 'win32') {
+		// On Win32, Darwin and Linux, use the binding to set the times
+		if ((process.platform === 'win32') || (process.platform === 'linux')) {
 			await callBinding(target, times, flags);
 		}
 
@@ -56,13 +56,13 @@ async function utimes(paths, options) {
 			await callBinding(target, transformed, 7);
 		}
 
-		// On Linux, set mtime with the fs library (atime must be set as well)
+		// On other platforms, set mtime with the fs library (atime must be set as well)
 		else if (flags & 2) {
 			const atime = flags & 4 ? times.atime : (await stat(target)).atime.getTime();
 			await utimesFs(target, atime / 1000, times.mtime / 1000);
 		}
 
-		// On Linux, set atime without changing mtime
+		// On other platforms, set atime without changing mtime
 		else {
 			const stats = await stat(target);
 			const mtime = stats.mtime.getTime();
