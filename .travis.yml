@@ -32,10 +32,8 @@ script:
       npm run publish:clean;
       npm run publish:x86 || travis_terminate 1;
       npm run publish:clean;
-      if [[ "$TRAVIS_OS_NAME" != "windows" ]]; then
-        npm run publish:arm || travis_terminate 1;
-        npm run publish:clean;
-      fi;
+      npm run publish:arm || travis_terminate 1;
+      npm run publish:clean;
       sleep 15;
       npm run install:from-remote || travis_terminate 1;
       npm run test;
@@ -45,9 +43,7 @@ after_failure:
   - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] && [[ "$COMMIT_MESSAGE" =~ "[publish binary]" ]]; then
       npm run unpublish --target_arch=x64;
       npm run unpublish --target_arch=x86;
-      if [[ "$TRAVIS_OS_NAME" != "windows" ]]; then
-        npm run unpublish --target_arch=arm;
-      fi;
+      npm run unpublish --target_arch=arm;
     fi
 
 os:
