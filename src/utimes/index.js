@@ -37,23 +37,8 @@ async function utimes(paths, options) {
 
 	for (const target of targets) {
 		// On Win32, Darwin and Linux, use the binding to set the times
-		if ((process.platform === 'win32') || (process.platform === 'linux')) {
+		if (process.platform === 'win32' || process.platform === 'linux' || process.platform === 'darwin') {
 			await callBinding(target, times, flags);
-		}
-
-		// There's a bug on OS X where you need to pass all 3 times or things don't work properly
-		else if (process.platform === 'darwin') {
-			const transformed = Object.assign({}, times);
-
-			if (Object.values(times).indexOf(0) >= 0) {
-				const stats = await stat(target);
-
-				if (times.atime === 0) transformed.atime = stats.atime.getTime();
-				if (times.mtime === 0) transformed.mtime = stats.mtime.getTime();
-				if (times.btime === 0) transformed.btime = stats.birthtime.getTime();
-			}
-
-			await callBinding(target, transformed, 7);
 		}
 
 		// On other platforms, set mtime with the fs library (atime must be set as well)
