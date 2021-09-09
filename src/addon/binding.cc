@@ -30,9 +30,8 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 	if (flags == 0) return 0;
 
 	#if defined(__APPLE__)
-		struct attrlist attrs;
-		struct timespec times[3];
-
+		struct attrlist attrList;
+		struct timespec utimes[3];
 		struct attrBuff {
 			u_int32_t ssize;
 			struct timespec created;
@@ -40,24 +39,25 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			struct timespec accessed;
 		} __attribute__ ((packed));
 
-		struct attrBuff info;
+		struct attrBuff attrBuf;
 
-		memset(&attrs, 0, sizeof(struct attrlist));
+		memset(&attrList, 0, sizeof(struct attrlist));
 
-		attrs.bitmapcount = ATTR_BIT_MAP_COUNT;
-		attrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
+		attrList.bitmapcount = ATTR_BIT_MAP_COUNT;
+		attrList.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
 
 		int err;
-		err = getattrlist(path, &attrs, &info, sizeof(info), 0);
+		err = getattrlist(path, &attrList, &attrBuf, sizeof(info), 0);
 
 		if (err == 0) {
-			assert(sizeof(info) == info.ssize);
+			assert(sizeof(attrBuf) == info.ssize);
+			memcpy(&utimes, &(attrBuf.created), sizeof(struct timespec) * 3);
 
-			if (flags & 1) set_timespec(btime, &info.created);
-			if (flags & 2) set_timespec(mtime, &info.modified);
-			if (flags & 4) set_timespec(atime, &info.accessed);
+			if (flags & 1) set_timespec(btime, &attrBuf.created);
+			if (flags & 2) set_timespec(mtime, &attrBuf.modified);
+			if (flags & 4) set_timespec(atime, &attrBuf.accessed);
 
-			err = setattrlist(path, &attrs, &info.created, 3 * sizeof(struct timespec), 0);
+			err = setattrlist(path, &attrList, &attrBuf.created, sizeof(utimes), 0);
 		}
 
 		return err;
