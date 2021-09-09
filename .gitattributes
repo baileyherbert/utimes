@@ -1,0 +1,10 @@
+pnpm-lock.yaml merge=binary
+shrinkwrap.yaml merge=binary
+npm-shrinkwrap.json merge=binary
+yarn.lock merge=binary
+*.json linguist-language=JSON-with-Comments
+*.ts text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+.cpp text eol=lf

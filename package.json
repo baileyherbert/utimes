@@ -2,14 +2,13 @@
 	"name": "utimes",
 	"version": "4.1.0",
 	"description": "Native addon to change the btime, mtime, and atime of a file.",
-	"main": "src/utimes/index.js",
+	"main": "dist/main.js",
+	"types": "dist/main.d.ts",
 	"files": [
 		"binding.gyp",
-		"src/utimes/index.js",
-		"src/utimes/index.d.ts",
-		"src/addon/binding.cc"
+		"dist/**/*",
+		"cpp/**/*"
 	],
-	"types": "src/utimes/index.d.ts",
 	"homepage": "https://github.com/baileyherbert/utimes",
 	"repository": "github:baileyherbert/utimes",
 	"bugs": "https://github.com/baileyherbert/utimes/issues",
@@ -39,21 +38,36 @@
 		"publish:arm": "node-pre-gyp clean configure build package publish --target_arch=arm",
 		"publish:clean": "node-pre-gyp clean && node-gyp clean",
 		"unpublish": "node-pre-gyp unpublish",
-		"test": "mocha"
+		"tsc": "rimraf dist && tsc",
+		"test": "jest"
 	},
 	"dependencies": {
 		"@mapbox/node-pre-gyp": "^1.0.5",
 		"node-addon-api": "^3.2.1"
 	},
 	"devDependencies": {
+		"@types/jest": "^27.0.1",
+		"@types/node": "^16.9.0",
 		"aws-sdk": "^2.910.0",
-		"mocha": "^7.2.0"
+		"jest": "^27.1.1",
+		"rimraf": "^3.0.2",
+		"ts-jest": "^27.0.5",
+		"typescript": "^4.4.2"
 	},
 	"binary": {
 		"module_name": "utimes",
-		"module_path": "./lib/binding/{configuration}/{node_abi}-{platform}-{arch}/",
+		"module_path": "./artifacts/",
 		"remote_path": "./{version}/{configuration}/",
 		"package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz",
 		"host": "https://node-utimes.s3.amazonaws.com"
+	},
+	"jest": {
+		"preset": "ts-jest",
+		"testEnvironment": "node",
+		"globals": {
+			"ts-jest": {
+				"tsconfig": "tests/tsconfig.json"
+			}
+		}
 	}
 }
