@@ -47,10 +47,10 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 		attrList.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
 
 		int err;
-		err = getattrlist(path, &attrList, &attrBuf, sizeof(info), 0);
+		err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), 0);
 
 		if (err == 0) {
-			assert(sizeof(attrBuf) == info.ssize);
+			assert(sizeof(attrBuf) == attrBuf.ssize);
 			memcpy(&utimes, &(attrBuf.created), sizeof(struct timespec) * 3);
 
 			if (flags & 1) set_timespec(btime, &attrBuf.created);
