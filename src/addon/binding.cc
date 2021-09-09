@@ -48,6 +48,8 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 		err = getattrlist(path, &attrs, &info, sizeof(info), 0);
 
 		if (err == 0) {
+			assert(sizeof(info) == info.ssize);
+
 			if (flags & 1) set_timespec(btime, &info.created);
 			if (flags & 2) set_timespec(mtime, &info.modified);
 			if (flags & 4) set_timespec(atime, &info.accessed);
