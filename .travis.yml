@@ -4,13 +4,6 @@
 language: node_js
 
 node_js:
-  - "8"
-  - "10"
-  - "11"
-  - "12"
-  - "13"
-  - "14"
-  - "15"
   - "16"
 
 before_install:
@@ -47,9 +40,7 @@ after_failure:
     fi
 
 os:
-  - linux
   - osx
-  - windows
 
 addons:
   apt:

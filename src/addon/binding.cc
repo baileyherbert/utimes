@@ -31,8 +31,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 
 	#if defined(__APPLE__)
 		struct attrlist attrs;
-		struct timespec times[3];
-		unsigned int index = 0;
+		// struct timespec times[3];
 
 		struct {
 			long ssize;
@@ -45,8 +44,8 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 		memset(&info, 0, sizeof(info));
 
 		attrs.bitmapcount = ATTR_BIT_MAP_COUNT;
-		attrs.reserved = 0;
 		attrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
+		attrs.reserved = 0;
 		attrs.volattr = 0;
 		attrs.dirattr = 0;
 		attrs.fileattr = 0;
@@ -60,23 +59,19 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 		// TODO: Find a way to avoid doing this in the future!
 		getattrlist(path, &attrs, &info, sizeof(info), 0);
 
-		times[0] = info.created;
-		times[1] = info.modified;
-		times[2] = info.accessed;
-
 		if (flags & 1) {
-			set_timespec(btime, &(times[0]));
+			set_timespec(btime, &info.created);
 		}
 
 		if (flags & 2) {
-			set_timespec(mtime, &(times[1]));
+			set_timespec(mtime, &info.modified);
 		}
 
 		if (flags & 4) {
-			set_timespec(atime, &(times[2]));
+			set_timespec(atime, &info.accessed);
 		}
 
-		return setattrlist(path, &attrs, times, 3 * sizeof(struct timespec), 0);
+		return setattrlist(path, &attrs, &info.created, 3 * sizeof(struct timespec), 0);
 	#elif defined(__linux__)
 		struct timespec ts[2];
 		if (flags & 4) {
