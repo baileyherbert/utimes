@@ -3,6 +3,10 @@ name: Build & test
 on:
   push:
     branches: [master, main]
+    paths-ignore:
+      - 'README.md'
+      - 'package.json'
+      - '.github/workflows/publish.yml'
   pull_request:
     types: [opened, reopened, synchronize]
 
