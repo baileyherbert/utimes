@@ -52,8 +52,12 @@ jobs:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
 
       # Build on the current platform
-      - name: Build
+      - name: Build native addon
         run: npm run build
+
+      # Compile the module with tsc
+      - name: Build module
+        run: npm run tsc
 
       # Runs all tests with the current build
       - name: Test
