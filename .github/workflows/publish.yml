@@ -1,0 +1,102 @@
+name: Publish binaries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.os }} (node v${{ matrix.node }})
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['8', '10', '11', '12', '13', '14', '15', '16']
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AMAZONACCESSID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AMAZONSECRET }}
+
+    steps:
+
+      # Check out files
+      - uses: actions/checkout@v2
+
+      # We need 32-bit libraries for publishing
+      - name: Install gcc-multilib
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install g++-multilib -y
+
+      # Prepare our target node version
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Install all dependencies
+      - name: Install dependencies
+        run: |
+          npm install --ignore-scripts
+          npm install request
+
+      # Add msbuild for Windows
+      - name: Add msbuild to PATH
+        if: matrix.os == 'windows-latest'
+        uses: microsoft/setup-msbuild@v1.0.0
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+
+      # Build on the current platform
+      - name: Build
+        run: npm run build
+
+      # Runs all tests with the current build
+      - name: Test
+        run: npm test
+
+      # Publish for x86
+      - name: Publish (x86)
+        id: publish_x86
+        run: |
+          npm run publish:clean
+          npm run publish:x86
+      - name: Rollback if failed (x86)
+        if: failure() && steps.publish_x86.outcome == 'failure'
+        run: |
+          npm run unpublish --target_arch=x86
+
+      # Publish for x64
+      - name: Publish (x64)
+        id: publish_x64
+        run: |
+          npm run publish:clean
+          npm run publish:x64
+      - name: Rollback if failed (x64)
+        if: failure() && steps.publish_x64.outcome == 'failure'
+        run: |
+          npm run unpublish --target_arch=x64
+
+      # Publish for ARM
+      - name: Publish (ARM)
+        id: publish_arm
+        if: matrix.os != 'windows-latest'
+        run: |
+          npm run publish:clean
+          npm run publish:arm
+      - name: Rollback if failed (ARM)
+        if: failure() && steps.publish_arm.outcome == 'failure'
+        run: |
+          npm run unpublish --target_arch=arm
+
+      # Download the built files to make sure they didn't get corrupt or something (/shrug)
+      - name: Install remote build
+        run: |
+          npm run publish:clean
+          npm run install:from-remote
+
+      # Runs all tests with the remote build
+      - name: Test remote build
+        run: npm test
