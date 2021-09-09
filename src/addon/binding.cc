@@ -31,13 +31,16 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 
 	#if defined(__APPLE__)
 		struct attrlist attrs;
+		struct timespec times[3];
 
-		struct {
+		struct attrBuff {
 			u_int32_t ssize;
 			struct timespec created;
 			struct timespec modified;
 			struct timespec accessed;
-		} info;
+		} __attribute__ ((packed));
+
+		struct attrBuff info;
 
 		memset(&attrs, 0, sizeof(struct attrlist));
 
