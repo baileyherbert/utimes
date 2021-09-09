@@ -31,7 +31,6 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 
 	#if defined(__APPLE__)
 		struct attrlist attrs;
-		// struct timespec times[3];
 
 		struct {
 			long ssize;
@@ -41,37 +40,22 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 		} info;
 
 		memset(&attrs, 0, sizeof(struct attrlist));
-		memset(&info, 0, sizeof(info));
 
 		attrs.bitmapcount = ATTR_BIT_MAP_COUNT;
 		attrs.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
-		attrs.reserved = 0;
-		attrs.volattr = 0;
-		attrs.dirattr = 0;
-		attrs.fileattr = 0;
-		attrs.forkattr = 0;
 
-		// For some reason, the CRTIME, MODTIME, and ACCTIME must all be passed together otherwise the timestamps
-		// are set unpredictably. I don't have a macOS device to investigate or find more efficient methods...
-		// PRs to improve this would be much appreciated!
+		int err;
+		err = getattrlist(path, &attrs, &info, sizeof(info), 0);
 
-		// Look up the current timestamps
-		// TODO: Find a way to avoid doing this in the future!
-		getattrlist(path, &attrs, &info, sizeof(info), 0);
+		if (err == 0) {
+			if (flags & 1) set_timespec(btime, &info.created);
+			if (flags & 2) set_timespec(mtime, &info.modified);
+			if (flags & 4) set_timespec(atime, &info.accessed);
 
-		if (flags & 1) {
-			set_timespec(btime, &info.created);
+			err = setattrlist(path, &attrs, &info.created, 3 * sizeof(struct timespec), 0);
 		}
 
-		if (flags & 2) {
-			set_timespec(mtime, &info.modified);
-		}
-
-		if (flags & 4) {
-			set_timespec(atime, &info.accessed);
-		}
-
-		return setattrlist(path, &attrs, &info.created, 3 * sizeof(struct timespec), 0);
+		return err;
 	#elif defined(__linux__)
 		struct timespec ts[2];
 		if (flags & 4) {
