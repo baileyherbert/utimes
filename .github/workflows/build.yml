@@ -1,0 +1,43 @@
+name: Build & test
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  build:
+    name: ${{ matrix.os }} (node v${{ matrix.node }})
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['16']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      # Check out files
+      - uses: actions/checkout@v2
+
+      # Prepare our target node version
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Install all dependencies
+      - name: Install dependencies
+        run: |
+          npm install --ignore-scripts
+          npm install request
+
+      # Build on the current platform
+      - name: Build
+        run: npm run build
+
+      # Runs all tests with the current build
+      - name: Test
+        run: npm test
