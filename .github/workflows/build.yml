@@ -11,6 +11,7 @@ jobs:
     name: ${{ matrix.os }} (node v${{ matrix.node }})
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         node: ['16']
