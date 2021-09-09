@@ -53,11 +53,11 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			assert(sizeof(attrBuf) == attrBuf.ssize);
 			memcpy(&utimes, &(attrBuf.created), sizeof(struct timespec) * 3);
 
-			if (flags & 1) set_timespec(btime, &attrBuf.created);
-			if (flags & 2) set_timespec(mtime, &attrBuf.modified);
-			if (flags & 4) set_timespec(atime, &attrBuf.accessed);
+			if (flags & 1) set_timespec(btime, &(utimes[0]));
+			if (flags & 2) set_timespec(mtime, &(utimes[1]));
+			if (flags & 4) set_timespec(atime, &(utimes[2]));
 
-			err = setattrlist(path, &attrList, &attrBuf.created, sizeof(utimes), 0);
+			err = setattrlist(path, &attrList, &utimes, sizeof(utimes), 0);
 		}
 
 		return err;
