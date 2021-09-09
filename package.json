@@ -1,7 +1,7 @@
 {
 	"name": "utimes",
 	"version": "4.1.0",
-	"description": "Change the btime, mtime, and atime of a file.",
+	"description": "Native addon to change the btime, mtime, and atime of a file.",
 	"main": "src/utimes/index.js",
 	"files": [
 		"binding.gyp",
@@ -10,10 +10,14 @@
 		"src/addon/binding.cc"
 	],
 	"types": "src/utimes/index.d.ts",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/baileyherbert/utimes.git"
-	},
+	"homepage": "https://github.com/baileyherbert/utimes",
+	"repository": "github:baileyherbert/utimes",
+	"bugs": "https://github.com/baileyherbert/utimes/issues",
+	"author": "Bailey <hello@bailey.sh> (https://github.com/baileyherbert)",
+	"contributors": [
+		"Joran Dirk Greef (https://github.com/jorangreef)",
+		"Jule (https://github.com/Jule-)"
+	],
 	"keywords": [
 		"access time",
 		"atime",
@@ -25,21 +29,7 @@
 		"mtime",
 		"utimes"
 	],
-	"author": "Bailey Herbert",
-	"contributors": [
-		{
-			"name": "Joran Dirk Greef",
-			"url": "https://github.com/jorangreef"
-		},
-		{
-			"name": "Jule-",
-			"url": "https://github.com/Jule-"
-		}
-	],
 	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/baileyherbert/utimes/issues"
-	},
 	"scripts": {
 		"install": "node-pre-gyp install --fallback-to-build && node-gyp clean",
 		"install:from-remote": "node-pre-gyp install --fallback-to-build=false --update-binary",

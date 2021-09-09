@@ -5,18 +5,21 @@ Change the `btime`, `mtime`, and `atime` of files on Windows, macOS and Linux.
 ```ts
 import { utimes } from 'utimes';
 
+// Update specific timestamps and leave the rest unchanged
 utimes('/path/to/file', {
 	btime: 447775200000 // 1984-03-10T14:00:00.000Z
 });
+
+// Update all timestamps at once
+utimes('/path/to/file', Date.now());
 ```
 
 ## Installation
 
-Install with either `npm` or `yarn`:
+The package will automatically download prebuilt binaries for Windows, macOS, and Linux when installing. For other platforms, build tools will be necessary.
 
 ```
 npm install utimes
-yarn add utimes
 ```
 
 ## Usage
@@ -28,13 +31,23 @@ function utimes(path: string, options: TimeOptions): Promise<void>;
 function utimes(paths: string[], options: TimeOptions): Promise<void>;
 ```
 
-Set timestamps on the file(s) by passing an object with the `btime`, `mtime`, and `atime` as unix millisecond timestamps. If any of these properties are set to `undefined`, `null`, or `0`, then the existing timestamps will be preserved.
+Pass an object with the `btime`, `mtime`, and `atime` as unix millisecond timestamps. If any of these properties are set to `undefined`, `null`, or `0`, then the existing timestamps will be preserved.
 
 ```ts
 utimes('/path/to/file', {
+	btime: 447775200000 // mtime and atime will be unchanged
+});
+
+utimes('/path/to/file', {
 	btime: 447775200000,
 	atime: 447775200000,
-	mtime: 444328600000
+	mtime: 444328600000,
+});
+
+utimes('/path/to/file', {
+	btime: 447775200000,
+	atime: 447775200000,
+	mtime: 0 // mtime will be unchanged
 });
 ```
 
@@ -46,7 +59,7 @@ utimes('/path/to/file', 447775200000);
 
 ## Caveats
 
-- Linux does not support setting the `btime` timestamp – attempts to do so will be silently ignored.
+- Linux does not support the `btime` timestamp. Attempts to set it will be ignored (other changes will still be applied).
 - File descriptors are not supported.
 
 ## Credits
