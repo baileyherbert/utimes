@@ -33,7 +33,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 		struct attrlist attrs;
 
 		struct {
-			long ssize;
+			u_int32_t ssize;
 			struct timespec created;
 			struct timespec modified;
 			struct timespec accessed;
