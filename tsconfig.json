@@ -24,7 +24,6 @@
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
 		"noImplicitReturns": true,
-		"noImplicitOverride": true,
 		"importsNotUsedAsValues": "remove",
 
 		"skipLibCheck": true,
