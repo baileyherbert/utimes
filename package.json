@@ -1,7 +1,7 @@
 {
 	"name": "utimes",
-	"version": "4.1.0",
-	"description": "Native addon to change the btime, mtime, and atime of a file.",
+	"version": "4.1.1",
+	"description": "Native addon to change the btime, mtime, and atime of a file on Windows, macOS, and Linux.",
 	"main": "dist/main.js",
 	"types": "dist/main.d.ts",
 	"files": [
