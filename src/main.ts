@@ -24,7 +24,7 @@ const nativeAddon = (function() {
 const useNativeAddon = ['darwin', 'win32', 'linux'].indexOf(process.platform) >= 0;
 
 /**
- * Updates the timestamps on the given file path(s).
+ * Updates the timestamps on the given path(s).
  *
  * If a `callback` function is provided, it will be invoked after the operation completes with an optional error
  * argument. Otherwise, a promise will be returned.
@@ -36,6 +36,42 @@ const useNativeAddon = ['darwin', 'win32', 'linux'].indexOf(process.platform) >=
 export function utimes(path: string | string[], options: TimeOptions): Promise<void>;
 export function utimes(path: string | string[], options: TimeOptions, callback: (error?: Error) => void): void;
 export function utimes(path: string | string[], options: TimeOptions, callback?: (error?: Error) => void) {
+	return invokeUTimes(path, options, true, callback);
+}
+
+
+/**
+ * Updates the timestamps on the given path(s). If the path(s) point to a symbolic link, then the timestamps of
+ * the symbolic link itself are changed.
+ *
+ * If a `callback` function is provided, it will be invoked after the operation completes with an optional error
+ * argument. Otherwise, a promise will be returned.
+ *
+ * @param path
+ * @param options
+ * @param callback
+ */
+export function lutimes(path: string | string[], options: TimeOptions): Promise<void>;
+export function lutimes(path: string | string[], options: TimeOptions, callback: (error?: Error) => void): void;
+export function lutimes(path: string | string[], options: TimeOptions, callback?: (error?: Error) => void) {
+	return invokeUTimes(path, options, false, callback);
+}
+
+/**
+ * Invokes utimes with the given options.
+ *
+ * @param path A string path or an array of string paths.
+ * @param options The timestamps to use.
+ * @param resolveLinks Whether or not to resolve symbolic links and update their target file instead.
+ * @param callback Function to invoke when completed.
+ * @returns
+ */
+function invokeUTimes(
+	path: string | string[],
+	options: TimeOptions,
+	resolveLinks: boolean,
+	callback?: (error?: Error) => void
+) {
 	return new Promise<void>((promiseResolve, promiseReject) => {
 		const targets = getNormalizedPaths(path);
 		const times = getNormalizedOptions(options);
@@ -55,6 +91,7 @@ export function utimes(path: string | string[], options: TimeOptions, callback?:
 					target,
 					times,
 					flags,
+					resolveLinks,
 					error => error !== undefined ? reject(error) : invokeAtIndex(index + 1)
 				);
 			}
@@ -166,8 +203,14 @@ function getFlags(options: NormalizedTimeOptions): number {
  * @param times
  * @param flags
  */
-function invokeNativeAddon(path: string, times: NormalizedTimeOptions, flags: number, callback: (error?: Error) => void): void {
-	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, (result: number) => {
+function invokeNativeAddon(
+	path: string,
+	times: NormalizedTimeOptions,
+	flags: number,
+	resolveSymbolicLinks: boolean,
+	callback: (error?: Error) => void
+): void {
+	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveSymbolicLinks, (result: number) => {
 		if (result !== 0) {
 			return callback(new Error(`(${result}), utimes(${path})`));
 		}

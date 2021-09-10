@@ -61,6 +61,18 @@ export function assertFileTimesLoosely(filePath: string, expected: ResolvedTimes
 }
 
 /**
+ * Runs the given callback, and asserts after it completes that the given file's timestamps have not changed.
+ *
+ * @param filePath
+ * @param callback
+ */
+export async function assertTimesUnchanged(filePath: string, callback: (...args: any[]) => any) {
+	const timesBefore = getFileTimes(filePath);
+	await callback();
+	assertFileTimes(filePath, timesBefore);
+}
+
+/**
  * Returns an error message to use for a timestamp mismatch.
  *
  * @param name

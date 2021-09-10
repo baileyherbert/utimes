@@ -116,6 +116,91 @@ describe('Multiple files', function() {
 	});
 });
 
+// Test symlinks
+describe('Symbolic link', function() {
+	// I develop locally on a Windows machine and symlinks require admin privileges to create for some reason
+	// Try to create a symlink file but catch errors
+	const symLinkPath = (function() {
+		try {
+			if (fs.existsSync(filePath)) {
+				fs.unlinkSync(filePath);
+			}
+
+			const target = filePath + '-sym';
+
+			fs.writeFileSync(filePath, 'Hello!');
+			fs.symlinkSync(filePath, target);
+
+			return target;
+		}
+		catch (err) {
+			return null;
+		}
+	})();
+
+	// Skip tests if the symlink creation failed
+	const wrappedIt = symLinkPath ? it : it.skip;
+	const wrappedLinuxIt = (symLinkPath && process.platform !== 'linux') ? it : it.skip;
+
+	symLinkPath && beforeAll(function() {
+		if (fs.existsSync(symLinkPath)) {
+			fs.unlinkSync(symLinkPath);
+		}
+
+		if (fs.existsSync(filePath)) {
+			fs.unlinkSync(filePath);
+		}
+
+		fs.writeFileSync(filePath, 'Hello!');
+		fs.symlinkSync(filePath, symLinkPath);
+	});
+
+	afterAll(function() {
+		if (fs.existsSync(filePath)) {
+			fs.unlinkSync(filePath);
+		}
+
+		if (symLinkPath && fs.unlinkSync(symLinkPath)) {
+			fs.unlinkSync(symLinkPath);
+		}
+	});
+
+	wrappedIt('Can change atime', async function() {
+		await utils.assertTimesUnchanged(filePath, async function() {
+			await utils.testSetTimes(dirPath, { atime: 447775200000 });
+			await utils.testSetTimesCallback(dirPath, { atime: 946684800000 });
+		});
+	});
+
+	wrappedIt('Can change mtime', async function() {
+		await utils.assertTimesUnchanged(filePath, async function() {
+			await utils.testSetTimes(dirPath, { mtime: 447775200000 });
+			await utils.testSetTimesCallback(dirPath, { mtime: 946684800000 });
+		});
+	});
+
+	wrappedLinuxIt('Can change btime', async function() {
+		await utils.assertTimesUnchanged(filePath, async function() {
+			await utils.testSetTimes(dirPath, { btime: 447775200000 });
+			await utils.testSetTimesCallback(dirPath, { btime: 946684800000 });
+		});
+	});
+
+	wrappedIt('Can change two times at once', async function() {
+		await utils.assertTimesUnchanged(filePath, async function() {
+			await utils.testSetTimes(dirPath, { mtime: 223887600000, atime: 223888600000 });
+			await utils.testSetTimesCallback(dirPath, { mtime: 323887600000, atime: 323888600000 });
+		});
+	});
+
+	wrappedIt('Can change all times at once', async function() {
+		await utils.assertTimesUnchanged(filePath, async function() {
+			await utils.testSetTimes(dirPath, { mtime: 447775200000, atime: 447776200000, btime: 447777200000 });
+			await utils.testSetTimesCallback(dirPath, { mtime: 946684800000, atime: 946685800000, btime: 946686800000 });
+		});
+	});
+});
+
 // Test on a directory
 describe('Directory', function() {
 	beforeEach(function() {
