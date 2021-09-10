@@ -1,4 +1,4 @@
-import { utimes } from '../src/main';
+import { lutimes, utimes } from '../src/main';
 import fs from 'fs';
 import assert from 'assert';
 import util from 'util';
@@ -7,10 +7,11 @@ import util from 'util';
  * Returns the timestamps for the given file.
  *
  * @param filePath
+ * @param resolveLinks
  * @returns
  */
-export function getFileTimes(filePath: string): ResolvedTimestampCollection {
-	const stats = fs.statSync(filePath);
+export function getFileTimes(filePath: string, resolveLinks = true): ResolvedTimestampCollection {
+	const stats = fs[resolveLinks ? 'statSync' : 'lstatSync'](filePath);
 
 	return {
 		atime: stats.atime.getTime(),
@@ -24,9 +25,10 @@ export function getFileTimes(filePath: string): ResolvedTimestampCollection {
  *
  * @param filePath
  * @param expected
+ * @param resolveLinks
  */
-export function assertFileTimes(filePath: string, expected: UTimestampCollection) {
-	const actual = getFileTimes(filePath);
+export function assertFileTimes(filePath: string, expected: UTimestampCollection, resolveLinks = true) {
+	const actual = getFileTimes(filePath, resolveLinks);
 
 	if (typeof expected.atime !== 'undefined') {
 		assert.equal(actual.atime, expected.atime, getTimeMismatchMessage('atime', actual, expected));
@@ -57,6 +59,45 @@ export function assertFileTimesLoosely(filePath: string, expected: ResolvedTimes
 
 	if (process.platform !== 'linux') {
 		assert(diff(actual.btime, expected.btime) <= margin, getTimeMismatchMessage('btime', actual, expected));
+	}
+}
+
+/**
+ * Runs the given callback, and asserts after it completes that the given file's timestamps have not changed.
+ *
+ * @param filePath
+ * @param callback
+ * @param resolveLinks
+ */
+export async function assertTimesUnchanged(filePath: string, callback: (...args: any[]) => any, resolveLinks = true) {
+	const timesBefore = getFileTimes(filePath, resolveLinks);
+	await callback();
+	const timesAfter = getFileTimes(filePath, resolveLinks);
+
+	function getMismatchMessage(name: 'atime' | 'btime' | 'mtime') {
+		return util.format(
+			'File %s (with links resolved: %s) unexpectedly had its %s timestamp changed, before: %s, after: %s',
+			filePath,
+			resolveLinks.toString(),
+			name,
+			JSON.stringify(timesBefore),
+			JSON.stringify(timesAfter)
+		);
+	}
+
+	if (typeof timesBefore.atime !== 'undefined') {
+		// The lstat() call used in getFileTimes seems to change the 'atime' of the symlink on linux
+		if (resolveLinks || process.platform !== 'linux') {
+			assert.equal(timesAfter.atime, timesBefore.atime, getMismatchMessage('atime'));
+		}
+	}
+
+	if (typeof timesBefore.btime !== 'undefined' && process.platform !== 'linux') {
+		assert.equal(timesAfter.btime, timesBefore.btime, getMismatchMessage('btime'));
+	}
+
+	if (typeof timesBefore.mtime !== 'undefined') {
+		assert.equal(timesAfter.mtime, timesBefore.mtime, getMismatchMessage('mtime'));
 	}
 }
 
@@ -115,14 +156,17 @@ export function mergeTimes(a: UTimestampCollection, b: UTimestampCollection | nu
  *
  * @param filePath
  * @param times
+ * @param resolveLinks
  * @returns
  */
-export async function testSetTimes(filePath: string, times: UTimestampCollection | number) {
-	const now = getFileTimes(filePath);
+export async function testSetTimes(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
+	const now = getFileTimes(filePath, resolveLinks);
 	const expected = mergeTimes(now, times);
 
-	await utimes(filePath, times);
-	assertFileTimes(filePath, expected);
+	const fn = resolveLinks ? utimes : lutimes;
+	await fn(filePath, times);
+
+	assertFileTimes(filePath, expected, resolveLinks);
 }
 
 /**
@@ -130,18 +174,25 @@ export async function testSetTimes(filePath: string, times: UTimestampCollection
  *
  * @param filePath
  * @param times
+ * @param resolveLinks
  * @returns
  */
-export async function testSetTimesCallback(filePath: string, times: UTimestampCollection | number) {
+export async function testSetTimesCallback(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
 	return new Promise<void>((resolve, reject) => {
-		const now = getFileTimes(filePath);
+		const now = getFileTimes(filePath, resolveLinks);
 		const expected = mergeTimes(now, times);
 
-		utimes(filePath, times, error => {
+		const fn = resolveLinks ? utimes : lutimes;
+		fn(filePath, times, error => {
 			if (error) return reject(error);
 
-			assertFileTimes(filePath, expected);
-			resolve();
+			try {
+				assertFileTimes(filePath, expected, resolveLinks);
+				resolve();
+			}
+			catch (error) {
+				reject(error);
+			}
 		});
 	});
 }

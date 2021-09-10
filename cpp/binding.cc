@@ -26,7 +26,14 @@
 	}
 #endif
 
-int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, const uint64_t mtime, const uint64_t atime) {
+int set_utimes(
+	const char* path,
+	const uint8_t flags,
+	const uint64_t btime,
+	const uint64_t mtime,
+	const uint64_t atime,
+	const bool resolveLinks
+) {
 	if (flags == 0) return 0;
 
 	#if defined(__APPLE__)
@@ -47,7 +54,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 		attrList.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
 
 		int err;
-		err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), 0);
+		err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), resolveLinks ? 0 : FSOPT_NOFOLLOW);
 
 		if (err == 0) {
 			assert(sizeof(attrBuf) == attrBuf.ssize);
@@ -57,7 +64,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			if (flags & 2) set_timespec(mtime, &(utimes[1]));
 			if (flags & 4) set_timespec(atime, &(utimes[2]));
 
-			err = setattrlist(path, &attrList, &utimes, sizeof(utimes), 0);
+			err = setattrlist(path, &attrList, &utimes, sizeof(utimes), resolveLinks ? 0 : FSOPT_NOFOLLOW);
 		}
 
 		return err;
@@ -75,7 +82,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			ts[1].tv_nsec = UTIME_OMIT;
 		}
 
-		return utimensat(AT_FDCWD, path, ts, 0);
+		return utimensat(AT_FDCWD, path, ts, resolveLinks ? 0 : AT_SYMLINK_NOFOLLOW);
 	#elif defined(_WIN32)
 		int chars = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
 		if (chars == 0) return GetLastError();
@@ -90,7 +97,7 @@ int set_utimes(const char* path, const uint8_t flags, const uint64_t btime, cons
 			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 			NULL,
 			OPEN_EXISTING,
-			FILE_FLAG_BACKUP_SEMANTICS,
+			FILE_FLAG_BACKUP_SEMANTICS | (resolveLinks ? 0 : FILE_FLAG_OPEN_REPARSE_POINT),
 			NULL
 		);
 		free(pathw);
@@ -128,6 +135,7 @@ class UtimesWorker : public Napi::AsyncWorker {
 			const uint64_t btime,
 			const uint64_t mtime,
 			const uint64_t atime,
+			const bool resolveLinks,
 			const Napi::Function &callback
 		) : Napi::AsyncWorker(callback),
 			pathHandleRef(Napi::ObjectReference::New(pathHandle, 1)),
@@ -135,12 +143,13 @@ class UtimesWorker : public Napi::AsyncWorker {
 			flags(flags),
 			btime(btime),
 			mtime(mtime),
-			atime(atime) {}
+			atime(atime),
+			resolveLinks(resolveLinks) {}
 
 		~UtimesWorker() {}
 
 		void Execute() {
-			result = set_utimes(path, flags, btime, mtime, atime);
+			result = set_utimes(path, flags, btime, mtime, atime, resolveLinks);
 			if (result > 0) {
 				result = -result;
 			}
@@ -163,14 +172,15 @@ class UtimesWorker : public Napi::AsyncWorker {
 		const uint64_t btime;
 		const uint64_t mtime;
 		const uint64_t atime;
+		const bool resolveLinks;
 		int result;
 };
 
 void utimes(const Napi::CallbackInfo& info) {
-	if (info.Length() != 6 || !info[0].IsBuffer() || !info[1].IsNumber() || !info[2].IsNumber() || !info[3].IsNumber() || !info[4].IsNumber() || !info[5].IsFunction()) {
+	if (info.Length() != 7 || !info[0].IsBuffer() || !info[1].IsNumber() || !info[2].IsNumber() || !info[3].IsNumber() || !info[4].IsNumber() || !info[5].IsBoolean() || !info[6].IsFunction()) {
 		throw Napi::Error::New(info.Env(), "bad arguments, expected: ("
 			"buffer path, int flags, "
-			"seconds btime, seconds mtime, seconds atime, "
+			"seconds btime, seconds mtime, seconds atime, bool resolveLinks, "
 			"function callback"
 			")"
 		);
@@ -181,9 +191,10 @@ void utimes(const Napi::CallbackInfo& info) {
 	const uint64_t btime = info[2].As<Napi::Number>().Int64Value();
 	const uint64_t mtime = info[3].As<Napi::Number>().Int64Value();
 	const uint64_t atime = info[4].As<Napi::Number>().Int64Value();
+	const bool resolveLinks = info[5].As<Napi::Boolean>().Value();
 
-	Napi::Function callback = info[5].As<Napi::Function>();
-	UtimesWorker *worker = new UtimesWorker(pathHandle, flags, btime, mtime, atime, callback);
+	Napi::Function callback = info[6].As<Napi::Function>();
+	UtimesWorker *worker = new UtimesWorker(pathHandle, flags, btime, mtime, atime, resolveLinks, callback);
 	worker->Queue();
 }
 
@@ -196,5 +207,3 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 }
 
 NODE_API_MODULE(NODE_GYP_MODULE_NAME, Init)
-
-// S.D.G.
