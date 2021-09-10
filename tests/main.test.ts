@@ -171,7 +171,9 @@ describe('Symbolic link', function() {
 			await utils.testSetTimes(symLinkPath!, { atime: 447775200000 }, false);
 			await utils.testSetTimesCallback(symLinkPath!, { atime: 946684800000 }, false);
 		});
+	});
 
+	wrappedIt('Can change atime without affecting symlink', async function() {
 		await utils.assertTimesUnchanged(symLinkPath!, async function() {
 			await utils.testSetTimes(symLinkPath!, { atime: 447775200000 });
 			await utils.testSetTimesCallback(symLinkPath!, { atime: 946684800000 });
@@ -183,7 +185,9 @@ describe('Symbolic link', function() {
 			await utils.testSetTimes(symLinkPath!, { mtime: 447775200000 }, false);
 			await utils.testSetTimesCallback(symLinkPath!, { mtime: 946684800000 }, false);
 		});
+	});
 
+	wrappedIt('Can change mtime without affecting symlink', async function() {
 		await utils.assertTimesUnchanged(symLinkPath!, async function() {
 			await utils.testSetTimes(symLinkPath!, { mtime: 447775200000 });
 			await utils.testSetTimesCallback(symLinkPath!, { mtime: 946684800000 });
@@ -195,7 +199,9 @@ describe('Symbolic link', function() {
 			await utils.testSetTimes(symLinkPath!, { btime: 447775200000 }, false);
 			await utils.testSetTimesCallback(symLinkPath!, { btime: 946684800000 }, false);
 		});
+	});
 
+	wrappedLinuxIt('Can change btime without affecting symlink', async function() {
 		await utils.assertTimesUnchanged(symLinkPath!, async function() {
 			await utils.testSetTimes(symLinkPath!, { btime: 447775200000 });
 			await utils.testSetTimesCallback(symLinkPath!, { btime: 946684800000 });
@@ -207,7 +213,9 @@ describe('Symbolic link', function() {
 			await utils.testSetTimes(symLinkPath!, { mtime: 223887600000, atime: 223888600000 }, false);
 			await utils.testSetTimesCallback(symLinkPath!, { mtime: 323887600000, atime: 323888600000 }, false);
 		});
+	});
 
+	wrappedIt('Can change two times at once without affecting symlink', async function() {
 		await utils.assertTimesUnchanged(symLinkPath!, async function() {
 			await utils.testSetTimes(symLinkPath!, { mtime: 223887600000, atime: 223888600000 });
 			await utils.testSetTimesCallback(symLinkPath!, { mtime: 323887600000, atime: 323888600000 });
@@ -219,7 +227,9 @@ describe('Symbolic link', function() {
 			await utils.testSetTimes(symLinkPath!, { mtime: 447775200000, atime: 447776200000, btime: 447777200000 }, false);
 			await utils.testSetTimesCallback(symLinkPath!, { mtime: 946684800000, atime: 946685800000, btime: 946686800000 }, false);
 		});
+	});
 
+	wrappedIt('Can change all times at once without affecting symlink', async function() {
 		await utils.assertTimesUnchanged(symLinkPath!, async function() {
 			await utils.testSetTimes(symLinkPath!, { mtime: 447775200000, atime: 447776200000, btime: 447777200000 });
 			await utils.testSetTimesCallback(symLinkPath!, { mtime: 946684800000, atime: 946685800000, btime: 946686800000 });
