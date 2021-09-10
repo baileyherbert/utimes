@@ -22,6 +22,9 @@ const dirPath = path.join(tempDir, 'temp-dir');
 // Utility for non-linux tests
 const nonLinuxIt = process.platform === 'linux' ? it.skip : it;
 
+// Increase timeout
+jest.setTimeout(30000);
+
 // Test on a file
 describe('File', function() {
 	beforeEach(function() {

@@ -176,15 +176,20 @@ export async function testSetTimes(filePath: string, times: UTimestampCollection
  */
 export async function testSetTimesCallback(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
 	return new Promise<void>((resolve, reject) => {
-		const now = getFileTimes(filePath);
+		const now = getFileTimes(filePath, resolveLinks);
 		const expected = mergeTimes(now, times);
 
 		const fn = resolveLinks ? utimes : lutimes;
 		fn(filePath, times, error => {
 			if (error) return reject(error);
 
-			assertFileTimes(filePath, expected);
-			resolve();
+			try {
+				assertFileTimes(filePath, expected, resolveLinks);
+				resolve();
+			}
+			catch (error) {
+				reject(error);
+			}
 		});
 	});
 }

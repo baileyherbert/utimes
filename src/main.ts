@@ -98,10 +98,10 @@ function invokeUTimes(
 
 			// Fall back to using `fs.utimes` for other platforms
 			else {
-				fs.stat(target, (statsErr, stats) => {
+				fs[resolveLinks ? 'stat' : 'lstat'](target, (statsErr, stats) => {
 					if (statsErr) return reject(statsErr);
 
-					fs.utimes(
+					fs[resolveLinks ? 'utimes' : 'lutimes'](
 						target,
 						(flags & 4 ? times.atime : stats.atime.getTime()) / 1000,
 						(flags & 2 ? times.mtime : stats.mtime.getTime()) / 1000,

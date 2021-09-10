@@ -54,7 +54,7 @@ int set_utimes(
 		attrList.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
 
 		int err;
-		err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), resolveLinks ? FSOPT_NOFOLLOW : 0);
+		err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), resolveLinks ? 0 : FSOPT_NOFOLLOW);
 
 		if (err == 0) {
 			assert(sizeof(attrBuf) == attrBuf.ssize);
@@ -64,7 +64,7 @@ int set_utimes(
 			if (flags & 2) set_timespec(mtime, &(utimes[1]));
 			if (flags & 4) set_timespec(atime, &(utimes[2]));
 
-			err = setattrlist(path, &attrList, &utimes, sizeof(utimes), resolveLinks ? FSOPT_NOFOLLOW : 0);
+			err = setattrlist(path, &attrList, &utimes, sizeof(utimes), resolveLinks ? 0 : FSOPT_NOFOLLOW);
 		}
 
 		return err;
@@ -82,7 +82,7 @@ int set_utimes(
 			ts[1].tv_nsec = UTIME_OMIT;
 		}
 
-		return utimensat(AT_FDCWD, path, ts, resolveLinks ? AT_SYMLINK_NOFOLLOW : 0);
+		return utimensat(AT_FDCWD, path, ts, resolveLinks ? 0 : AT_SYMLINK_NOFOLLOW);
 	#elif defined(_WIN32)
 		int chars = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
 		if (chars == 0) return GetLastError();
@@ -97,7 +97,7 @@ int set_utimes(
 			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 			NULL,
 			OPEN_EXISTING,
-			FILE_FLAG_BACKUP_SEMANTICS | (resolveLinks ? FILE_FLAG_OPEN_REPARSE_POINT : 0),
+			FILE_FLAG_BACKUP_SEMANTICS | (resolveLinks ? 0 : FILE_FLAG_OPEN_REPARSE_POINT),
 			NULL
 		);
 		free(pathw);
