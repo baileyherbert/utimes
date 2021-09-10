@@ -142,10 +142,8 @@ describe('Symbolic link', function() {
 	const wrappedIt = symLinkPath ? it : it.skip;
 	const wrappedLinuxIt = (symLinkPath && process.platform !== 'linux') ? it : it.skip;
 
-	symLinkPath && beforeAll(function() {
-		if (fs.existsSync(symLinkPath)) {
-			fs.unlinkSync(symLinkPath);
-		}
+	symLinkPath && beforeEach(function() {
+		fs.unlinkSync(symLinkPath);
 
 		if (fs.existsSync(filePath)) {
 			fs.unlinkSync(filePath);
@@ -156,47 +154,47 @@ describe('Symbolic link', function() {
 	});
 
 	afterAll(function() {
-		if (fs.existsSync(filePath)) {
-			fs.unlinkSync(filePath);
+		if (symLinkPath !== null) {
+			fs.unlinkSync(symLinkPath);
 		}
 
-		if (symLinkPath && fs.unlinkSync(symLinkPath)) {
-			fs.unlinkSync(symLinkPath);
+		if (fs.existsSync(filePath)) {
+			fs.unlinkSync(filePath);
 		}
 	});
 
 	wrappedIt('Can change atime', async function() {
 		await utils.assertTimesUnchanged(filePath, async function() {
-			await utils.testSetTimes(dirPath, { atime: 447775200000 });
-			await utils.testSetTimesCallback(dirPath, { atime: 946684800000 });
+			await utils.testSetTimes(symLinkPath!, { atime: 447775200000 }, false);
+			await utils.testSetTimesCallback(symLinkPath!, { atime: 946684800000 }, false);
 		});
 	});
 
 	wrappedIt('Can change mtime', async function() {
 		await utils.assertTimesUnchanged(filePath, async function() {
-			await utils.testSetTimes(dirPath, { mtime: 447775200000 });
-			await utils.testSetTimesCallback(dirPath, { mtime: 946684800000 });
+			await utils.testSetTimes(symLinkPath!, { mtime: 447775200000 }, false);
+			await utils.testSetTimesCallback(symLinkPath!, { mtime: 946684800000 }, false);
 		});
 	});
 
 	wrappedLinuxIt('Can change btime', async function() {
 		await utils.assertTimesUnchanged(filePath, async function() {
-			await utils.testSetTimes(dirPath, { btime: 447775200000 });
-			await utils.testSetTimesCallback(dirPath, { btime: 946684800000 });
+			await utils.testSetTimes(symLinkPath!, { btime: 447775200000 }, false);
+			await utils.testSetTimesCallback(symLinkPath!, { btime: 946684800000 }, false);
 		});
 	});
 
 	wrappedIt('Can change two times at once', async function() {
 		await utils.assertTimesUnchanged(filePath, async function() {
-			await utils.testSetTimes(dirPath, { mtime: 223887600000, atime: 223888600000 });
-			await utils.testSetTimesCallback(dirPath, { mtime: 323887600000, atime: 323888600000 });
+			await utils.testSetTimes(symLinkPath!, { mtime: 223887600000, atime: 223888600000 }, false);
+			await utils.testSetTimesCallback(symLinkPath!, { mtime: 323887600000, atime: 323888600000 }, false);
 		});
 	});
 
 	wrappedIt('Can change all times at once', async function() {
 		await utils.assertTimesUnchanged(filePath, async function() {
-			await utils.testSetTimes(dirPath, { mtime: 447775200000, atime: 447776200000, btime: 447777200000 });
-			await utils.testSetTimesCallback(dirPath, { mtime: 946684800000, atime: 946685800000, btime: 946686800000 });
+			await utils.testSetTimes(symLinkPath!, { mtime: 447775200000, atime: 447776200000, btime: 447777200000 }, false);
+			await utils.testSetTimesCallback(symLinkPath!, { mtime: 946684800000, atime: 946685800000, btime: 946686800000 }, false);
 		});
 	});
 });
