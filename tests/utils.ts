@@ -74,27 +74,30 @@ export async function assertTimesUnchanged(filePath: string, callback: (...args:
 	await callback();
 	const timesAfter = getFileTimes(filePath, resolveLinks);
 
-	function getMismatchMessage(name: 'atime' | 'btime' | 'mtime', actual: UTimestampCollection, expected: UTimestampCollection) {
+	function getMismatchMessage(name: 'atime' | 'btime' | 'mtime') {
 		return util.format(
-			'File %s (with links resolved: %s) unexpectedly had its %s timestamp changed',
+			'File %s (with links resolved: %s) unexpectedly had its %s timestamp changed, before: %s, after: %s',
 			filePath,
 			resolveLinks.toString(),
 			name,
-			JSON.stringify(expected),
-			JSON.stringify(actual)
+			JSON.stringify(timesBefore),
+			JSON.stringify(timesAfter)
 		);
 	}
 
 	if (typeof timesBefore.atime !== 'undefined') {
-		assert.equal(timesAfter.atime, timesBefore.atime, getMismatchMessage('atime', timesAfter, timesBefore));
+		// The lstat() call used in getFileTimes seems to change the 'atime' of the symlink on linux
+		if (resolveLinks || process.platform !== 'linux') {
+			assert.equal(timesAfter.atime, timesBefore.atime, getMismatchMessage('atime'));
+		}
 	}
 
 	if (typeof timesBefore.btime !== 'undefined' && process.platform !== 'linux') {
-		assert.equal(timesAfter.btime, timesBefore.btime, getMismatchMessage('btime', timesAfter, timesBefore));
+		assert.equal(timesAfter.btime, timesBefore.btime, getMismatchMessage('btime'));
 	}
 
 	if (typeof timesBefore.mtime !== 'undefined') {
-		assert.equal(timesAfter.mtime, timesBefore.mtime, getMismatchMessage('mtime', timesAfter, timesBefore));
+		assert.equal(timesAfter.mtime, timesBefore.mtime, getMismatchMessage('mtime'));
 	}
 }
 
