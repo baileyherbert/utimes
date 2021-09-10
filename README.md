@@ -16,15 +16,15 @@ utimes('/path/to/file', Date.now());
 
 ## Installation
 
-The package will automatically download prebuilt binaries for Windows, macOS, and Linux when installing. For other platforms, build tools will be necessary.
-
 ```
 npm install utimes
 ```
 
 ## Usage
 
-The library exports a function called `utimes`:
+### `utimes`
+
+This function changes the timestamps on one or more files or directories. If the paths resolve to a symbolic link, the link's target file will be changed.
 
 ```ts
 function utimes(path: string, options: TimeOptions): Promise<void>;
@@ -34,17 +34,17 @@ function utimes(paths: string[], options: TimeOptions): Promise<void>;
 Pass an object with the `btime`, `mtime`, and `atime` as unix millisecond timestamps. If any of these properties are set to `undefined`, `null`, or `0`, then the existing timestamps will be preserved.
 
 ```ts
-utimes('/path/to/file', {
+await utimes('/path/to/file', {
 	btime: 447775200000 // mtime and atime will be unchanged
 });
 
-utimes('/path/to/file', {
+await utimes('/path/to/file', {
 	btime: 447775200000,
 	atime: 447775200000,
 	mtime: 444328600000,
 });
 
-utimes('/path/to/file', {
+await utimes('/path/to/file', {
 	btime: 447775200000,
 	atime: 447775200000,
 	mtime: 0 // mtime will be unchanged
@@ -54,12 +54,33 @@ utimes('/path/to/file', {
 Set all three timestamps to the same value by passing a single millisecond timestamp. Passing `0` will immediately return without making any changes to the file.
 
 ```ts
-utimes('/path/to/file', 447775200000);
+await utimes('/path/to/file', 447775200000);
+```
+
+### `lutimes`
+
+This function is identical to `utimes`, except if the paths resolve to symbolic links, then the timestamps will be applied to the links themselves, and the target files will be unaffected.
+
+```ts
+await lutimes('/path/to/symlink', {
+	btime: 447775200000 // mtime and atime will be unchanged
+});
+```
+
+### Using callbacks
+
+If you don't want to use promises, you can also pass a callback function as the last argument for both `utimes` and `lutimes`. The first parameter passed to this callback will be the error if applicable, or `undefined` otherwise.
+
+```ts
+utimes('/path/to/file', 447775200000, function(error) {
+	// Do something!
+});
 ```
 
 ## Caveats
 
 - Linux does not support the `btime` timestamp. Attempts to set it will be ignored (other changes will still be applied).
+- For platforms other than `win32`, `darwin`, and `linux`, the `fs.utimes` and `fs.lutimes` functions will be used behind the scenes.
 - File descriptors are not supported.
 
 ## Credits
