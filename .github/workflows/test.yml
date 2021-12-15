@@ -1,18 +1,23 @@
-name: Build & test
+name: test
 
 on:
   push:
-    branches: [master, main]
+    branches:
+      - master
+      - main
     paths-ignore:
       - 'README.md'
       - 'package.json'
       - '.github/workflows/publish.yml'
   pull_request:
-    types: [opened, reopened, synchronize]
+    types:
+      - opened
+      - reopened
+      - synchronize
 
 jobs:
   build:
-    name: ${{ matrix.os }} (node v${{ matrix.node }})
+    name: ${{ matrix.os }} (v${{ matrix.node }})
 
     strategy:
       fail-fast: false

@@ -1,13 +1,14 @@
-name: Publish assets
+name: publish
 
 on:
   release:
-    types: [created]
+    types:
+      - published
   workflow_dispatch:
 
 jobs:
   build:
-    name: ${{ matrix.os }} (node v${{ matrix.node }})
+    name: Publish to S3 (${{ matrix.os }} / v${{ matrix.node }})
 
     strategy:
       matrix:
@@ -50,6 +51,18 @@ jobs:
         uses: microsoft/setup-msbuild@v1.0.0
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+
+      - name: Extract version information
+        id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Set user
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Set package version
+        run: npm --no-git-tag-version version ${{ steps.get_version.outputs.version-without-v }}
 
       # Build on the current platform
       - name: Build native addon
@@ -117,6 +130,19 @@ jobs:
         with:
           node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Extract version information
+        id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Set user
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Set package version
+        run: npm --no-git-tag-version version ${{ steps.get_version.outputs.version-without-v }}
+
       - run: npm install
       - run: npm run tsc
       - run: npm publish
