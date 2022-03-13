@@ -110,6 +110,18 @@ jobs:
         run: |
           npm run unpublish --target_arch=arm
 
+      # Publish for ARM64
+      - name: Publish (ARM64)
+        id: publish_arm64
+        if: matrix.os != 'windows-latest'
+        run: |
+          npm run publish:clean
+          npm run publish:arm64
+      - name: Rollback if failed (ARM64)
+        if: failure() && steps.publish_arm64.outcome == 'failure'
+        run: |
+          npm run unpublish --target_arch=arm64
+
       # Download the built files to make sure they didn't get corrupt or something (/shrug)
       - name: Install remote build
         run: |

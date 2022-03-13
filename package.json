@@ -36,6 +36,7 @@
 		"publish:x64": "node-pre-gyp clean configure build package publish --target_arch=x64",
 		"publish:x86": "node-pre-gyp clean configure build package publish --target_arch=ia32",
 		"publish:arm": "node-pre-gyp clean configure build package publish --target_arch=arm",
+		"publish:arm64": "node-pre-gyp clean configure build package publish --target_arch=arm64",
 		"publish:clean": "node-pre-gyp clean && node-gyp clean",
 		"unpublish": "node-pre-gyp unpublish",
 		"tsc": "rimraf dist && tsc",
