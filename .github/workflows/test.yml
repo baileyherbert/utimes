@@ -2,12 +2,10 @@ name: test
 
 on:
   push:
-    branches:
-      - master
-      - main
+    branches: [main]
     paths-ignore:
       - 'README.md'
-      - 'package.json'
+      - 'LICENSE.md'
       - '.github/workflows/publish.yml'
       - '.github/dependabot.yml'
   pull_request:
