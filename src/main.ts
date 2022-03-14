@@ -225,8 +225,9 @@ function getFlags(options: NormalizedTimeOptions): number {
 function invokeBinding(path: string, times: NormalizedTimeOptions, flags: number, resolveLinks: boolean, callback: Callback): void {
 	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks, (result?: Error) => {
 		if (typeof result !== 'undefined') {
+			const name = resolveLinks ? 'lutimes' : 'utimes';
 			const message = result.message.trim().replace(/\.$/, '');
-			callback(new Error(`${message}, utimes '${path}'`));
+			callback(new Error(`${message}, ${name} '${path}'`));
 			return;
 		}
 

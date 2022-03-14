@@ -282,7 +282,7 @@ describe('Errors', function() {
 		const filePath = path.join(tempDir, 'nonexistent-file');
 
 		await (async () => {
-			const error = await utils.invoke(filePath, { atime: 447775200000 });
+			const error = await utils.invoke(filePath, { atime: 447775200000 }, false);
 			expect(typeof error).toBe('string');
 
 			if (process.platform === 'win32') {
@@ -298,10 +298,10 @@ describe('Errors', function() {
 			expect(typeof error).toBe('string');
 
 			if (process.platform === 'win32') {
-				expect(error).toEqual(`The system cannot find the file specified, utimes '${filePath}'`);
+				expect(error).toEqual(`The system cannot find the file specified, lutimes '${filePath}'`);
 			}
 			else {
-				expect(error).toEqual(`No such file or directory, utimes '${filePath}'`);
+				expect(error).toEqual(`No such file or directory, lutimes '${filePath}'`);
 			}
 		})();
 	});
