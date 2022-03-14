@@ -55,7 +55,7 @@
 	"binary": {
 		"module_name": "utimes",
 		"module_path": "./lib/binding/napi-v{napi_build_version}",
-		"host": "https://github.com/baileyherbert/utimes-testing/releases/download/",
+		"host": "https://github.com/baileyherbert/utimes/releases/download/",
 		"remote_path": "v{version}",
 		"package_name": "{module_name}-v{version}-napi-v{napi_build_version}-{platform}-{arch}.tar.gz",
 		"napi_versions": [
