@@ -1,0 +1,115 @@
+# This workflow is used to manually build artifacts
+# It requires the old binary configuration in v4.0.0+
+# For v5.0.0+, use the prebuild_manual_v5 workflow
+
+name: prebuild_manual_v4
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Target version (ie 4.0.0)'
+      ref:
+        description: 'Checkout ref (tag or SHA)'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        node-version: [8, 10, 11, 12, 13, 14, 15, 16]
+        os: [ubuntu-latest, macos-10.15, windows-2019]
+
+    name: build ${{ matrix.os }} (v${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.ref }}
+
+    - name: Install gcc-multilib
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install g++-multilib -y
+
+    - name: Add msbuild to path
+      if: matrix.os == 'windows-2019'
+      uses: microsoft/setup-msbuild@v1.0.0
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+
+    - name: Setup node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Set package version
+      run: npm --no-git-tag-version version ${{ github.event.inputs.version }}
+
+    - name: Install npm dependencies
+      run: |
+        npm i -g node-gyp
+        npm ci --ignore-scripts
+        npm i copyfiles@2.4.0 --ignore-scripts
+
+    - name: Build artifact (ia32)
+      run: |
+        npm run build --target_arch=ia32
+        npx copyfiles copyfiles -f ./build/stage/**/*.tar.gz packages
+
+    - name: Build artifact (x64)
+      run: |
+        npm run build --target_arch=x64
+        npx copyfiles copyfiles -f ./build/stage/**/*.tar.gz packages
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: artifacts-${{ github.event.inputs.version }}
+        path: packages/*.tar.gz
+
+  build-arm:
+    strategy:
+      matrix:
+        node-version: [8, 10, 11, 12, 13, 14, 15, 16]
+        arch: [aarch64, armv7]
+        distro: [ubuntu18.04]
+
+    name: build ${{ matrix.distro }}:${{ matrix.arch }} (v${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.ref }}
+
+    - name: Set package version
+      run: npm --no-git-tag-version version ${{ github.event.inputs.version }}
+
+    - name: Build artifact (${{ matrix.arch }})
+      uses: uraimo/run-on-arch-action@v2.1.1
+      with:
+        arch: ${{ matrix.arch }}
+        distro: ${{ matrix.distro }}
+        dockerRunArgs: --volume "${PWD}:/repo"
+        install: |
+          apt-get update -y
+          apt-get install -y curl
+          curl -fsSL https://deb.nodesource.com/setup_${{ matrix.node-version }}.x | bash -
+          apt-get install -y make g++ python nodejs
+        run: |
+          cd /repo
+          npm ci --ignore-scripts
+          npm i copyfiles@2.4.0 --ignore-scripts
+          npm run build
+          npx copyfiles copyfiles -f ./build/stage/**/*.tar.gz packages
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: artifacts-${{ github.event.inputs.version }}
+        path: packages/*.tar.gz
+

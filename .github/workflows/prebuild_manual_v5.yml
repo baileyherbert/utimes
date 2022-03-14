@@ -1,0 +1,100 @@
+# This workflow is used to manually build artifacts
+# It requires the new binary configuration in v5.0.0+
+# For older versions, use the prebuild_manual_v4 workflow
+
+name: prebuild_manual_v5
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Target version (ie 5.0.0)'
+      ref:
+        description: 'Checkout ref (tag or SHA)'
+
+jobs:
+
+  build:
+    strategy:
+      matrix:
+        node-version: [10.x]
+        os: [ubuntu-latest, macos-10.15, windows-2019]
+
+    name: build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.ref }}
+
+    - name: Install gcc-multilib
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install g++-multilib -y
+
+    - name: Setup node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Set package version
+      run: npm --no-git-tag-version version ${{ github.event.inputs.version }}
+
+    - name: Install npm dependencies
+      run: npm ci --ignore-scripts
+
+    - name: Build artifact (ia32)
+      run: npm run build --target_arch=ia32
+
+    - name: Build artifact (x64)
+      run: npm run build --target_arch=x64
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: artifacts-${{ github.event.inputs.version }}
+        path: packages/utimes*.tar.gz
+
+  build-arm:
+    strategy:
+      matrix:
+        arch: [aarch64, armv7]
+        distro: [ubuntu18.04]
+
+    name: build ${{ matrix.distro }}:${{ matrix.arch }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.ref }}
+
+    - name: Set package version
+      run: npm --no-git-tag-version version ${{ github.event.inputs.version }}
+
+    - name: Build artifact (${{ matrix.arch }})
+      uses: uraimo/run-on-arch-action@v2.1.1
+      with:
+        arch: ${{ matrix.arch }}
+        distro: ${{ matrix.distro }}
+        dockerRunArgs: --volume "${PWD}:/repo"
+        install: |
+          apt-get update -y
+          apt-get install -y curl
+          curl -fsSL https://deb.nodesource.com/setup_12.x | bash -
+          apt-get install -y make g++ python nodejs
+        run: |
+          cd /repo
+          npm ci --ignore-scripts
+          npm run build
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: artifacts-${{ github.event.inputs.version }}
+        path: packages/utimes*.tar.gz
+
