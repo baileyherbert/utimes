@@ -30,15 +30,8 @@
 	],
 	"license": "MIT",
 	"scripts": {
-		"install": "node-pre-gyp install --fallback-to-build && node-gyp clean",
-		"install:from-remote": "node-pre-gyp install --fallback-to-build=false --update-binary",
-		"build": "node-pre-gyp clean configure build package",
-		"publish:x64": "node-pre-gyp clean configure build package publish --target_arch=x64",
-		"publish:x86": "node-pre-gyp clean configure build package publish --target_arch=ia32",
-		"publish:arm": "node-pre-gyp clean configure build package publish --target_arch=arm",
-		"publish:arm64": "node-pre-gyp clean configure build package publish --target_arch=arm64",
-		"publish:clean": "node-pre-gyp clean && node-gyp clean",
-		"unpublish": "node-pre-gyp unpublish",
+		"install": "node-pre-gyp install --fallback-to-build",
+		"build": "node-pre-gyp clean configure build package && copyfiles -f ./build/stage/**/*.tar.gz packages",
 		"tsc": "rimraf dist && tsc",
 		"test": "jest"
 	},
@@ -57,10 +50,13 @@
 	},
 	"binary": {
 		"module_name": "utimes",
-		"module_path": "./artifacts/",
-		"remote_path": "./{version}/{configuration}/",
-		"package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz",
-		"host": "https://node-utimes.s3.amazonaws.com"
+		"module_path": "./lib/binding/napi-v{napi_build_version}",
+		"host": "https://github.com/baileyherbert/utimes-testing/releases/download/",
+		"remote_path": "v{version}",
+		"package_name": "{module_name}-v{version}-napi-v{napi_build_version}-{platform}-{arch}.tar.gz",
+		"napi_versions": [
+			3
+		]
 	},
 	"jest": {
 		"preset": "ts-jest",
