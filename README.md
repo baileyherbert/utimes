@@ -56,7 +56,7 @@ Starting with version 5.0.0, this package throws descriptive and user-friendly e
 
 ```ts
 Error {
-  message: "No such file or directory, utimes '/path/to/file'"
+    message: "No such file or directory, utimes '/path/to/file'"
 }
 ```
 
