@@ -22,9 +22,9 @@ await utimes('/path/to/file', 447775200000);
 
 // Change specific times (set to undefined or 0 to keep the same value)
 await utimes('/path/to/file', {
-	btime: 447775200000,
-	mtime: undefined,
-	atime: undefined
+    btime: 447775200000,
+    mtime: undefined,
+    atime: undefined
 });
 ```
 
@@ -34,7 +34,7 @@ The `lutimes()` function is identical to `utimes()`, but for paths which resolve
 
 ```ts
 await lutimes('/path/to/symlink', {
-	btime: 447775200000
+    btime: 447775200000
 });
 ```
 
@@ -46,7 +46,7 @@ If you're looking for maximum performance, using callbacks is recommended to avo
 
 ```ts
 utimes('/path/to/file', 447775200000, function(error) {
-	// Do something!
+    // Do something!
 });
 ```
 
