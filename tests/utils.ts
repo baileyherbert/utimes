@@ -152,6 +152,47 @@ export function mergeTimes(a: UTimestampCollection, b: UTimestampCollection | nu
 }
 
 /**
+ * Invokes `utimes` or `lutimes` with the given parameters and returns a promise.
+ *
+ * @param filePath
+ * @param times
+ * @param resolveLinks
+ * @returns
+ */
+export async function invoke(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
+	const fn = resolveLinks ? utimes : lutimes;
+
+	try {
+		return await fn(filePath, times);
+	}
+	catch (err) {
+		if (err instanceof Error) {
+			return err.message;
+		}
+
+		return "Unknown error";
+	}
+}
+
+/**
+ * Invokes `utimes` or `lutimes` with the given parameters in callback mode and returns a promise.
+ *
+ * @param filePath
+ * @param times
+ * @param resolveLinks
+ * @returns
+ */
+export async function invokeCallback(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
+	return new Promise<string | undefined>((resolve, reject) => {
+		const fn = resolveLinks ? utimes : lutimes;
+		fn(filePath, times, error => {
+			if (error) return resolve(error.message);
+			resolve(undefined);
+		});
+	});
+}
+
+/**
  * Returns the current timestamp as an object with `btime`, `mtime`, and `atime`.
  *
  * @param filePath

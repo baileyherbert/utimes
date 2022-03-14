@@ -5,9 +5,11 @@
 #if defined(__APPLE__)
 	#include <sys/attr.h>
 	#include <unistd.h>
+	#include <errno.h>
 #elif defined(__linux__)
 	#include <sys/stat.h>
 	#include <fcntl.h>
+	#include <errno.h>
 #elif defined(_WIN32)
 	#include <io.h>
 	#include <windows.h>
@@ -26,7 +28,7 @@
 	}
 #endif
 
-int set_utimes(
+void set_utimes(
 	const char* path,
 	const uint8_t flags,
 	const uint64_t btime,
@@ -34,7 +36,9 @@ int set_utimes(
 	const uint64_t atime,
 	const bool resolveLinks
 ) {
-	if (flags == 0) return 0;
+	if (flags == 0) {
+		return;
+	}
 
 	#if defined(__APPLE__)
 		struct attrlist attrList;
@@ -67,7 +71,9 @@ int set_utimes(
 			err = setattrlist(path, &attrList, &utimes, sizeof(utimes), resolveLinks ? 0 : FSOPT_NOFOLLOW);
 		}
 
-		return err;
+		if (err != 0) {
+			throw std::string(strerror(errno));
+		}
 	#elif defined(__linux__)
 		struct timespec ts[2];
 		if (flags & 4) {
@@ -82,48 +88,78 @@ int set_utimes(
 			ts[1].tv_nsec = UTIME_OMIT;
 		}
 
-		return utimensat(AT_FDCWD, path, ts, resolveLinks ? 0 : AT_SYMLINK_NOFOLLOW);
+		if (utimensat(AT_FDCWD, path, ts, resolveLinks ? 0 : AT_SYMLINK_NOFOLLOW) != 0) {
+			throw std::string(strerror(errno));
+		}
 	#elif defined(_WIN32)
+		DWORD err = 0;
+		WCHAR* pathw;
+		HANDLE handle;
+
 		int chars = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
-		if (chars == 0) return GetLastError();
+		if (chars == 0) {
+			err = GetLastError();
+		}
 
-		WCHAR* pathw = (WCHAR*) malloc(chars * sizeof(WCHAR));
-		if (pathw == NULL) return ERROR_OUTOFMEMORY;
+		if (err == 0) {
+			pathw = (WCHAR*) malloc(chars * sizeof(WCHAR));
+			if (pathw == NULL) {
+				err = ERROR_OUTOFMEMORY;
+			}
+		}
 
-		MultiByteToWideChar(CP_UTF8, 0, path, -1, pathw, chars);
-		HANDLE handle = CreateFileW(
-			pathw,
-			FILE_WRITE_ATTRIBUTES,
-			FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-			NULL,
-			OPEN_EXISTING,
-			FILE_FLAG_BACKUP_SEMANTICS | (resolveLinks ? 0 : FILE_FLAG_OPEN_REPARSE_POINT),
-			NULL
-		);
-		free(pathw);
+		if (err == 0) {
+			MultiByteToWideChar(CP_UTF8, 0, path, -1, pathw, chars);
+			handle = CreateFileW(
+				pathw,
+				FILE_WRITE_ATTRIBUTES,
+				FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+				NULL,
+				OPEN_EXISTING,
+				FILE_FLAG_BACKUP_SEMANTICS | (resolveLinks ? 0 : FILE_FLAG_OPEN_REPARSE_POINT),
+				NULL
+			);
+			free(pathw);
 
-		if (handle == INVALID_HANDLE_VALUE) return GetLastError();
+			if (handle == INVALID_HANDLE_VALUE) {
+				err = GetLastError();
+			}
+		}
 
-		FILETIME btime_filetime;
-		FILETIME mtime_filetime;
-		FILETIME atime_filetime;
+		if (err == 0) {
+			FILETIME btime_filetime;
+			FILETIME mtime_filetime;
+			FILETIME atime_filetime;
 
-		if (flags & 1) set_utimes_filetime(btime, &btime_filetime);
-		if (flags & 2) set_utimes_filetime(mtime, &mtime_filetime);
-		if (flags & 4) set_utimes_filetime(atime, &atime_filetime);
+			if (flags & 1) set_utimes_filetime(btime, &btime_filetime);
+			if (flags & 2) set_utimes_filetime(mtime, &mtime_filetime);
+			if (flags & 4) set_utimes_filetime(atime, &atime_filetime);
 
-		bool success = SetFileTime(
-			handle,
-			(flags & 1) ? &btime_filetime : NULL,
-			(flags & 4) ? &atime_filetime : NULL,
-			(flags & 2) ? &mtime_filetime : NULL
-		);
+			if (!SetFileTime(
+				handle,
+				(flags & 1) ? &btime_filetime : NULL,
+				(flags & 4) ? &atime_filetime : NULL,
+				(flags & 2) ? &mtime_filetime : NULL
+			)) {
+				err = GetLastError();
+			}
 
-		CloseHandle(handle);
+			CloseHandle(handle);
+		}
 
-		return success ? 0 : GetLastError();
+		if (err != 0) {
+			LPSTR buffer = nullptr;
+
+			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+										 NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&buffer, 0, NULL);
+
+			std::string message(buffer, size);
+			LocalFree(buffer);
+
+			throw message;
+		}
 	#else
-		return -1;
+		throw std::string("Unsupported platform");
 	#endif
 }
 
@@ -149,18 +185,18 @@ class UtimesWorker : public Napi::AsyncWorker {
 		~UtimesWorker() {}
 
 		void Execute() {
-			result = set_utimes(path, flags, btime, mtime, atime, resolveLinks);
-			if (result > 0) {
-				result = -result;
+			try {
+				set_utimes(path, flags, btime, mtime, atime, resolveLinks);
+			}
+			catch (std::string error) {
+				SetError(error);
 			}
 		}
 
 		void OnOK () {
 			Napi::HandleScope scope(Env());
 
-			Callback().Call({
-				Napi::Number::New(Env(), result)
-			});
+			Callback().Call({});
 
 			pathHandleRef.Unref();
 		}
@@ -173,7 +209,6 @@ class UtimesWorker : public Napi::AsyncWorker {
 		const uint64_t mtime;
 		const uint64_t atime;
 		const bool resolveLinks;
-		int result;
 };
 
 void utimes(const Napi::CallbackInfo& info) {

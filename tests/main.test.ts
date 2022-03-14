@@ -276,3 +276,33 @@ describe('Directory', function() {
 		await utils.testSetTimesCallback(dirPath, { mtime: 946684800000, atime: 946685800000, btime: 946686800000 });
 	});
 });
+
+describe('Errors', function() {
+	it('Throws for missing files', async function() {
+		const filePath = path.join(tempDir, 'nonexistent-file');
+
+		await (async () => {
+			const error = await utils.invoke(filePath, { atime: 447775200000 });
+			expect(typeof error).toBe('string');
+
+			if (process.platform === 'win32') {
+				expect(error).toEqual(`The system cannot find the file specified, utimes '${filePath}'`);
+			}
+			else {
+				expect(error).toEqual(`No such file or directory, utimes '${filePath}'`);
+			}
+		})();
+
+		await (async () => {
+			const error = await utils.invokeCallback(filePath, { atime: 447775200000 });
+			expect(typeof error).toBe('string');
+
+			if (process.platform === 'win32') {
+				expect(error).toEqual(`The system cannot find the file specified, utimes '${filePath}'`);
+			}
+			else {
+				expect(error).toEqual(`No such file or directory, utimes '${filePath}'`);
+			}
+		})();
+	});
+});

@@ -210,9 +210,11 @@ function invokeNativeAddon(
 	resolveSymbolicLinks: boolean,
 	callback: (error?: Error) => void
 ): void {
-	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveSymbolicLinks, (result: number) => {
-		if (result !== 0) {
-			return callback(new Error(`(${result}), utimes(${path})`));
+	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveSymbolicLinks, (result?: Error) => {
+		if (typeof result !== 'undefined') {
+			const message = result.message.trim().replace(/\.$/, '');
+			callback(new Error(`${message}, utimes '${path}'`));
+			return;
 		}
 
 		callback();
