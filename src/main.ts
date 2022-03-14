@@ -33,10 +33,10 @@ const useNativeAddon = ['darwin', 'win32', 'linux'].indexOf(process.platform) >=
  * @param options
  * @param callback
  */
-export function utimes(path: string | string[], options: TimeOptions): Promise<void>;
-export function utimes(path: string | string[], options: TimeOptions, callback: (error?: Error) => void): void;
-export function utimes(path: string | string[], options: TimeOptions, callback?: (error?: Error) => void) {
-	return invokeUTimes(path, options, true, callback);
+export function utimes(path: Paths, options: TimeOptions): Promise<void>;
+export function utimes(path: Paths, options: TimeOptions, callback: Callback): void;
+export function utimes(path: Paths, options: TimeOptions, callback?: Callback) {
+	return invokeWrapped(path, options, true, callback);
 }
 
 
@@ -51,10 +51,37 @@ export function utimes(path: string | string[], options: TimeOptions, callback?:
  * @param options
  * @param callback
  */
-export function lutimes(path: string | string[], options: TimeOptions): Promise<void>;
-export function lutimes(path: string | string[], options: TimeOptions, callback: (error?: Error) => void): void;
-export function lutimes(path: string | string[], options: TimeOptions, callback?: (error?: Error) => void) {
-	return invokeUTimes(path, options, false, callback);
+export function lutimes(path: Paths, options: TimeOptions): Promise<void>;
+export function lutimes(path: Paths, options: TimeOptions, callback: Callback): void;
+export function lutimes(path: Paths, options: TimeOptions, callback?: Callback) {
+	return invokeWrapped(path, options, false, callback);
+}
+
+/**
+ * Invokes utimes with the given options, and implements callbacks/promises based on the parameters.
+ *
+ * @param path
+ * @param options
+ * @param resolveLinks
+ * @param callback
+ * @returns
+ */
+function invokeWrapped(path: Paths, options: TimeOptions, resolveLinks: boolean, callback?: Callback) {
+	if (typeof callback === 'function') {
+		return invokeUTimes(path, options, resolveLinks, callback);
+	}
+	else {
+		return new Promise<void>((resolve, reject) => {
+			invokeUTimes(path, options, resolveLinks, error => {
+				if (typeof error !== 'undefined') {
+					reject(error);
+				}
+				else {
+					resolve();
+				}
+			});
+		});
+	}
 }
 
 /**
@@ -66,59 +93,51 @@ export function lutimes(path: string | string[], options: TimeOptions, callback?
  * @param callback Function to invoke when completed.
  * @returns
  */
-function invokeUTimes(
-	path: string | string[],
-	options: TimeOptions,
-	resolveLinks: boolean,
-	callback?: (error?: Error) => void
-) {
-	return new Promise<void>((promiseResolve, promiseReject) => {
-		const targets = getNormalizedPaths(path);
-		const times = getNormalizedOptions(options);
-		const flags = getFlags(times);
+function invokeUTimes(path: Paths, options: TimeOptions, resolveLinks: boolean, callback: Callback) {
+	const targets = getNormalizedPaths(path);
+	const times = getNormalizedOptions(options);
+	const flags = getFlags(times);
 
-		const resolve = () => typeof callback === 'function' ? callback() : promiseResolve();
-		const reject = (error: Error) => typeof callback === 'function' ? callback(error) : promiseReject(error);
-		const invokeAtIndex = (index: number) => {
-			const target = targets[index];
-			if (target === undefined) {
-				return resolve();
-			}
+	const invokeAtIndex = (index: number) => {
+		const target = targets[index];
 
-			// Invoke the native addon on supported platforms
-			if (useNativeAddon) {
-				invokeNativeAddon(
-					target,
-					times,
-					flags,
-					resolveLinks,
-					error => error !== undefined ? reject(error) : invokeAtIndex(index + 1)
-				);
-			}
-
-			// Fall back to using `fs.utimes` for other platforms
-			else {
-				fs[resolveLinks ? 'stat' : 'lstat'](target, (statsErr, stats) => {
-					if (statsErr) return reject(statsErr);
-
-					fs[resolveLinks ? 'utimes' : 'lutimes'](
-						target,
-						(flags & 4 ? times.atime : stats.atime.getTime()) / 1000,
-						(flags & 2 ? times.mtime : stats.mtime.getTime()) / 1000,
-						error => error ? reject(error) : invokeAtIndex(index + 1)
-					);
-				});
-			}
-		};
-
-		// Return if there's nothing to do
-		if (!flags || !targets.length) {
-			return resolve();
+		if (target === undefined) {
+			return callback();
 		}
 
-		// Start setting timestamps
-		invokeAtIndex(0);
-	});
+		// Invoke the native addon on supported platforms
+		if (useNativeAddon) {
+			invokeBinding(
+				target,
+				times,
+				flags,
+				resolveLinks,
+				error => error !== undefined ? callback(error) : invokeAtIndex(index + 1)
+			);
+		}
+
+		// Fall back to using `fs.utimes` for other platforms
+		else {
+			fs[resolveLinks ? 'stat' : 'lstat'](target, (statsErr, stats) => {
+				if (statsErr) return callback(statsErr);
+
+				fs[resolveLinks ? 'utimes' : 'lutimes'](
+					target,
+					(flags & 4 ? times.atime : stats.atime.getTime()) / 1000,
+					(flags & 2 ? times.mtime : stats.mtime.getTime()) / 1000,
+					error => error ? callback(error) : invokeAtIndex(index + 1)
+				);
+			});
+		}
+	};
+
+	// Return if there's nothing to do
+	if (!flags || !targets.length) {
+		return callback();
+	}
+
+	// Start setting timestamps
+	invokeAtIndex(0);
 }
 
 /**
@@ -126,10 +145,10 @@ function invokeUTimes(
  *
  * @param paths
  */
-function getNormalizedPaths(paths: string | string[]): string[] {
+function getNormalizedPaths(paths: Paths): string[] {
 	if (typeof paths === 'string') {
 		assertPath('path', paths);
-		return [ paths ];
+		return [paths];
 	}
 
 	if (Array.isArray(paths)) {
@@ -141,7 +160,7 @@ function getNormalizedPaths(paths: string | string[]): string[] {
 		return paths;
 	}
 
-	throw new Error('path must be a string or array');
+	throw new Error('Path must be a string or array');
 }
 
 /**
@@ -167,7 +186,7 @@ function getNormalizedOptions(options: TimeOptions): NormalizedTimeOptions {
 	}
 
 	if (typeof options !== 'object') {
-		throw new Error('options must be an object');
+		throw new Error('Options must be an object');
 	}
 
 	assertTimestamp('btime', options.btime);
@@ -203,14 +222,8 @@ function getFlags(options: NormalizedTimeOptions): number {
  * @param times
  * @param flags
  */
-function invokeNativeAddon(
-	path: string,
-	times: NormalizedTimeOptions,
-	flags: number,
-	resolveSymbolicLinks: boolean,
-	callback: (error?: Error) => void
-): void {
-	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveSymbolicLinks, (result?: Error) => {
+function invokeBinding(path: string, times: NormalizedTimeOptions, flags: number, resolveLinks: boolean, callback: Callback): void {
+	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks, (result?: Error) => {
 		if (typeof result !== 'undefined') {
 			const message = result.message.trim().replace(/\.$/, '');
 			callback(new Error(`${message}, utimes '${path}'`));
@@ -235,7 +248,7 @@ function getPathBuffer(target: string) {
 	buffer[buffer.length - 1] = 0;
 
 	if (buffer.indexOf(0) !== buffer.length - 1) {
-		throw new Error('path must be a string without null bytes');
+		throw new Error('Path must be a string without null bytes');
 	}
 
 	return buffer;
@@ -287,6 +300,8 @@ function assertTimestamp(key: string, value: any) {
  */
 export type TimeOptions = number | null | undefined | Partial<NormalizedTimeOptions>;
 
+type Paths = string | string[];
+type Callback = (error?: Error) => void;
 type NormalizedTimeOptions = {
 	/**
 	 * The birth time in milliseconds.
