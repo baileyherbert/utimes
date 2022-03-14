@@ -33,6 +33,8 @@ await utimes('/path/to/file', {
 The `lutimes()` function is identical to `utimes()`, but for paths which resolve to symbolic links, the links themselves will be changed, and their target files will be unaffected.
 
 ```ts
+import { lutimes } from 'utimes';
+
 await lutimes('/path/to/symlink', {
     btime: 447775200000
 });
