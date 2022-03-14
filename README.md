@@ -89,6 +89,6 @@ This was originally a fork of [@ronomon/utimes](https://www.npmjs.com/package/@r
 
 - Uses the native binding on linux to fix race conditions
 - Fixed issues with changing specific timestamps on macOS
-- Supports changing timestamps for symbolic links (with [`lutimes`](#symbolic-links)).
+- Supports changing timestamps for symbolic links (with [`lutimes`](#symbolic-links))
 - Throws descriptive errors instead of numbers
 - Modern API with both promises and callbacks written in TypeScript
