@@ -9,49 +9,35 @@ on:
       - 'README.md'
       - 'package.json'
       - '.github/workflows/publish.yml'
+      - '.github/dependabot.yml'
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
+    branches: [main]
 
 jobs:
   build:
-    name: ${{ matrix.os }} (v${{ matrix.node }})
-
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node: ['8', '16']
+        os: [ubuntu-latest, windows-2019, macos-latest]
+        node-version: [10, 16]
 
+    name: ${{ matrix.os }} (v${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
 
     steps:
+    - name: Checkout
+      uses: actions/checkout@v2
 
-      # Check out files
-      - uses: actions/checkout@v2
+    - name: Setup node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
 
-      # Prepare our target node version
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node }}
+    - name: Install npm dependencies
+      run: npm ci --ignore-scripts
 
-      # Install all dependencies
-      - name: Install dependencies
-        run: |
-          npm install --ignore-scripts
-          npm install request
+    - name: Build artifact
+      run: npm run build
 
-      # Build on the current platform
-      - name: Build native addon
-        run: npm run build
-
-      # Compile the module with tsc
-      - name: Build module
-        run: npm run tsc
-
-      # Runs all tests with the current build
-      - name: Test
-        run: npm test
+    - name: Run tests
+      run: npm run test
