@@ -57,8 +57,7 @@ void set_utimes(
 		attrList.bitmapcount = ATTR_BIT_MAP_COUNT;
 		attrList.commonattr = ATTR_CMN_CRTIME | ATTR_CMN_MODTIME | ATTR_CMN_ACCTIME;
 
-		int err;
-		err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), resolveLinks ? 0 : FSOPT_NOFOLLOW);
+		int err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), resolveLinks ? 0 : FSOPT_NOFOLLOW);
 
 		if (err == 0) {
 			assert(sizeof(attrBuf) == attrBuf.ssize);
@@ -76,17 +75,14 @@ void set_utimes(
 		}
 	#elif defined(__linux__)
 		struct timespec ts[2];
-		if (flags & 4) {
-			set_timespec(atime, &(ts[0]));
-		} else {
-			ts[0].tv_nsec = UTIME_OMIT;
-		}
 
-		if (flags & 2) {
-			set_timespec(mtime, &(ts[1]));
-		} else {
-			ts[1].tv_nsec = UTIME_OMIT;
-		}
+		// atime
+		if (flags & 4) set_timespec(atime, &(ts[0]));
+		else ts[0].tv_nsec = UTIME_OMIT;
+
+		// mtime
+		if (flags & 2) set_timespec(mtime, &(ts[1]));
+		else ts[1].tv_nsec = UTIME_OMIT;
 
 		if (utimensat(AT_FDCWD, path, ts, resolveLinks ? 0 : AT_SYMLINK_NOFOLLOW) != 0) {
 			throw std::string(strerror(errno));
@@ -135,12 +131,14 @@ void set_utimes(
 			if (flags & 2) set_utimes_filetime(mtime, &mtime_filetime);
 			if (flags & 4) set_utimes_filetime(atime, &atime_filetime);
 
-			if (!SetFileTime(
+			bool success = SetFileTime(
 				handle,
 				(flags & 1) ? &btime_filetime : NULL,
 				(flags & 4) ? &atime_filetime : NULL,
 				(flags & 2) ? &mtime_filetime : NULL
-			)) {
+			);
+
+			if (!success) {
 				err = GetLastError();
 			}
 
@@ -150,8 +148,10 @@ void set_utimes(
 		if (err != 0) {
 			LPSTR buffer = nullptr;
 
-			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-										 NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&buffer, 0, NULL);
+			size_t size = FormatMessageA(
+				FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&buffer, 0, NULL
+			);
 
 			std::string message(buffer, size);
 			LocalFree(buffer);
@@ -195,9 +195,7 @@ class UtimesWorker : public Napi::AsyncWorker {
 
 		void OnOK () {
 			Napi::HandleScope scope(Env());
-
 			Callback().Call({});
-
 			pathHandleRef.Unref();
 		}
 
@@ -238,6 +236,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 		Napi::String::New(env, "utimes"),
 		Napi::Function::New<utimes>(env)
 	);
+
 	return exports;
 }
 
