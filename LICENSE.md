@@ -1,7 +1,8 @@
 The MIT License (MIT)
 
-Copyright (c) 2017 Ronomon
-Copyright (c) 2020 Bailey Herbert
+Copyright (c) 2017 Ronomon (https://github.com/ronomon)
+Copyright (c) 2019 Jule- (https://github.com/Jule-)
+Copyright (c) 2020 Bailey Herbert (https://github.com/baileyherbert)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
