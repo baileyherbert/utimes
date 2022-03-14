@@ -28,6 +28,9 @@
 		"mtime",
 		"utimes"
 	],
+	"engines": {
+		"node": ">=10.0.0"
+	},
 	"license": "MIT",
 	"scripts": {
 		"install": "node-pre-gyp install --fallback-to-build",
