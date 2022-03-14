@@ -60,3 +60,6 @@ temp/
 .history
 .ionide
 artifacts/
+lib/
+build-tmp*/
+packages/
