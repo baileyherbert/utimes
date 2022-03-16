@@ -52,6 +52,17 @@ utimes('/path/to/file', 447775200000, function(error) {
 });
 ```
 
+### Working synchronously
+
+This package also offers synchronous versions of its functions.
+
+```ts
+import { utimesSync, lutimesSync } from 'utimes';
+
+utimesSync('/path/to/file', 447775200000);
+lutimesSync('/path/to/symlink', 447775200000);
+```
+
 ### Errors
 
 Starting with version 5.0.0, this package throws descriptive and user-friendly error messages. Please note that these messages come from the operating system and will not be consistent between systems. Here's an example:
@@ -94,3 +105,5 @@ This was originally a fork of [@ronomon/utimes](https://www.npmjs.com/package/@r
 - Supports changing timestamps for symbolic links (with [`lutimes`](#symbolic-links))
 - Throws descriptive errors instead of numbers
 - Modern API with both promises and callbacks written in TypeScript
+
+Huge thanks to all of the [contributors](https://github.com/baileyherbert/utimes/graphs/contributors) who helped with maintaining and improving this package!

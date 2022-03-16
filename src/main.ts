@@ -39,6 +39,16 @@ export function utimes(path: Paths, options: TimeOptions, callback?: Callback) {
 	return invokeWrapped(path, options, true, callback);
 }
 
+/**
+ * Synchronously updates the timestamps on the given path(s).
+ *
+ * @param path
+ * @param options
+ */
+export function utimesSync(path: Paths, options: TimeOptions): void {
+	return invokeUTimesSync(path, options, true);
+}
+
 
 /**
  * Updates the timestamps on the given path(s). If the path(s) point to a symbolic link, then the timestamps of
@@ -55,6 +65,16 @@ export function lutimes(path: Paths, options: TimeOptions): Promise<void>;
 export function lutimes(path: Paths, options: TimeOptions, callback: Callback): void;
 export function lutimes(path: Paths, options: TimeOptions, callback?: Callback) {
 	return invokeWrapped(path, options, false, callback);
+}
+
+/**
+ * Synchronously updates the timestamps on the given path(s).
+ *
+ * @param path
+ * @param options
+ */
+export function lutimesSync(path: Paths, options: TimeOptions): void {
+	return invokeUTimesSync(path, options, false);
 }
 
 /**
@@ -107,7 +127,7 @@ function invokeUTimes(path: Paths, options: TimeOptions, resolveLinks: boolean, 
 
 		// Invoke the native addon on supported platforms
 		if (useNativeAddon) {
-			invokeBinding(
+			invokeBindingAsync(
 				target,
 				times,
 				flags,
@@ -134,6 +154,55 @@ function invokeUTimes(path: Paths, options: TimeOptions, resolveLinks: boolean, 
 	// Return if there's nothing to do
 	if (!flags || !targets.length) {
 		return callback();
+	}
+
+	// Start setting timestamps
+	invokeAtIndex(0);
+}
+
+/**
+ * Invokes utimes synchronously with the given options.
+ *
+ * @param path A string path or an array of string paths.
+ * @param options The timestamps to use.
+ * @param resolveLinks Whether or not to resolve symbolic links and update their target file instead.
+ * @returns
+ */
+function invokeUTimesSync(path: Paths, options: TimeOptions, resolveLinks: boolean) {
+	const targets = getNormalizedPaths(path);
+	const times = getNormalizedOptions(options);
+	const flags = getFlags(times);
+
+	const invokeAtIndex = (index: number) => {
+		const target = targets[index];
+
+		if (target === undefined) {
+			return;
+		}
+
+		// Invoke the native addon on supported platforms
+		if (useNativeAddon) {
+			invokeBindingSync(target, times, flags, resolveLinks);
+			invokeAtIndex(index + 1);
+		}
+
+		// Fall back to using `fs.utimes` for other platforms
+		else {
+			const stats = fs[resolveLinks ? 'statSync' : 'lstatSync'](target);
+
+			fs[resolveLinks ? 'utimesSync' : 'lutimesSync'](
+				target,
+				(flags & 4 ? times.atime : stats.atime.getTime()) / 1000,
+				(flags & 2 ? times.mtime : stats.mtime.getTime()) / 1000
+			);
+
+			invokeAtIndex(index + 1);
+		}
+	};
+
+	// Return if there's nothing to do
+	if (!flags || !targets.length) {
+		return;
 	}
 
 	// Start setting timestamps
@@ -222,7 +291,7 @@ function getFlags(options: NormalizedTimeOptions): number {
  * @param times
  * @param flags
  */
-function invokeBinding(path: string, times: NormalizedTimeOptions, flags: number, resolveLinks: boolean, callback: Callback): void {
+function invokeBindingAsync(path: string, times: NormalizedTimeOptions, flags: number, resolveLinks: boolean, callback: Callback): void {
 	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks, (result?: Error) => {
 		if (typeof result !== 'undefined') {
 			const name = resolveLinks ? 'lutimes' : 'utimes';
@@ -233,6 +302,24 @@ function invokeBinding(path: string, times: NormalizedTimeOptions, flags: number
 
 		callback();
 	});
+}
+
+/**
+ * Calls the binding synchronously.
+ *
+ * @param path
+ * @param times
+ * @param flags
+ */
+function invokeBindingSync(path: string, times: NormalizedTimeOptions, flags: number, resolveLinks: boolean): void {
+	try {
+		nativeAddon.utimesSync(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks);
+	}
+	catch (error) {
+		const name = resolveLinks ? 'lutimes' : 'utimes';
+		const message = (<any>error).message.trim().replace(/\.$/, '');
+		throw new Error(`${message}, ${name} '${path}'`);
+	}
 }
 
 /**

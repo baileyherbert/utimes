@@ -1,4 +1,4 @@
-import { lutimes, utimes } from '../src/main';
+import { lutimes, lutimesSync, utimes, utimesSync } from '../src/main';
 import fs from 'fs';
 import assert from 'assert';
 import util from 'util';
@@ -193,6 +193,19 @@ export async function invokeCallback(filePath: string, times: UTimestampCollecti
 }
 
 /**
+ * Invokes `utimesSync` or `lutimesSync` with the given parameters.
+ *
+ * @param filePath
+ * @param times
+ * @param resolveLinks
+ * @returns
+ */
+export function invokeSync(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
+	const fn = resolveLinks ? utimesSync : lutimesSync;
+	fn(filePath, times);
+}
+
+/**
  * Returns the current timestamp as an object with `btime`, `mtime`, and `atime`.
  *
  * @param filePath
@@ -206,6 +219,24 @@ export async function testSetTimes(filePath: string, times: UTimestampCollection
 
 	const fn = resolveLinks ? utimes : lutimes;
 	await fn(filePath, times);
+
+	assertFileTimes(filePath, expected, resolveLinks);
+}
+
+/**
+ * Tests the ability to synchronously set times on the given file.
+ *
+ * @param filePath
+ * @param times
+ * @param resolveLinks
+ * @returns
+ */
+export async function testSetTimesSync(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
+	const now = getFileTimes(filePath, resolveLinks);
+	const expected = mergeTimes(now, times);
+
+	const fn = resolveLinks ? utimesSync : lutimesSync;
+	fn(filePath, times);
 
 	assertFileTimes(filePath, expected, resolveLinks);
 }
@@ -274,6 +305,22 @@ export async function testSetTimesMultiCallback(filePaths: string[], times: UTim
 			resolve();
 		});
 	});
+}
+
+/**
+ * Returns the current timestamp as an object with `btime`, `mtime`, and `atime`.
+ *
+ * @param filePaths
+ * @param times
+ * @returns
+ */
+export function testSetTimesMultiSync(filePaths: string[], times: UTimestampCollection | number) {
+	const targets = filePaths.map(path => ({ path, expected: mergeTimes(getFileTimes(path), times) }));
+	utimesSync(filePaths, times);
+
+	for (const file of targets) {
+		assertFileTimes(file.path, file.expected);
+	}
 }
 
 export type ResolvedTimestampCollection = {

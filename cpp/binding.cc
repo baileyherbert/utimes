@@ -231,10 +231,39 @@ void utimes(const Napi::CallbackInfo& info) {
 	worker->Queue();
 }
 
+void utimesSync(const Napi::CallbackInfo& info) {
+	if (info.Length() != 6 || !info[0].IsBuffer() || !info[1].IsNumber() || !info[2].IsNumber() || !info[3].IsNumber() || !info[4].IsNumber() || !info[5].IsBoolean()) {
+		throw Napi::Error::New(info.Env(), "bad arguments, expected: ("
+			"buffer path, int flags, "
+			"seconds btime, seconds mtime, seconds atime, bool resolveLinks"
+			")"
+		);
+	}
+
+	Napi::Buffer<char> pathHandle = info[0].As<Napi::Buffer<char>>();
+	const uint8_t flags = info[1].As<Napi::Number>().Uint32Value();
+	const uint64_t btime = info[2].As<Napi::Number>().Int64Value();
+	const uint64_t mtime = info[3].As<Napi::Number>().Int64Value();
+	const uint64_t atime = info[4].As<Napi::Number>().Int64Value();
+	const bool resolveLinks = info[5].As<Napi::Boolean>().Value();
+
+	try {
+		set_utimes(pathHandle.Data(), flags, btime, mtime, atime, resolveLinks);
+	}
+	catch (std::string error) {
+		throw Napi::Error::New(info.Env(), error);
+	}
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
 	exports.Set(
 		Napi::String::New(env, "utimes"),
 		Napi::Function::New<utimes>(env)
+	);
+
+	exports.Set(
+		Napi::String::New(env, "utimesSync"),
+		Napi::Function::New<utimesSync>(env)
 	);
 
 	return exports;
