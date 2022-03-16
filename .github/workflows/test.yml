@@ -3,11 +3,6 @@ name: test
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - 'README.md'
-      - 'LICENSE.md'
-      - '.github/workflows/publish.yml'
-      - '.github/dependabot.yml'
   pull_request:
     branches: [main]
 
