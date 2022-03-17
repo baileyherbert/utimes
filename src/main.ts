@@ -294,7 +294,7 @@ function getFlags(options: NormalizedTimeOptions): number {
 function invokeBindingAsync(path: string, times: NormalizedTimeOptions, flags: number, resolveLinks: boolean, callback: Callback): void {
 	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks, (result?: Error) => {
 		if (typeof result !== 'undefined') {
-			const name = resolveLinks ? 'lutimes' : 'utimes';
+			const name = resolveLinks ? 'utimes' : 'lutimes';
 			const message = result.message.trim().replace(/\.$/, '');
 			callback(new Error(`${message}, ${name} '${path}'`));
 			return;
@@ -316,7 +316,7 @@ function invokeBindingSync(path: string, times: NormalizedTimeOptions, flags: nu
 		nativeAddon.utimesSync(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks);
 	}
 	catch (error) {
-		const name = resolveLinks ? 'lutimes' : 'utimes';
+		const name = resolveLinks ? 'utimes' : 'lutimes';
 		const message = (<any>error).message.trim().replace(/\.$/, '');
 		throw new Error(`${message}, ${name} '${path}'`);
 	}
