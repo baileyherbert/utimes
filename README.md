@@ -85,7 +85,7 @@ Refer to the following table to see the minimum `utimes` version for prebuilt bi
 | **darwin** | 4.0.3 | 4.0.3 | -     | -     |
 | **linux**  | 4.0.3 | 4.0.3 | 5.0.0 | 5.0.0 |
 
-These binaries are available for Node.js versions 10.x and above. They are currently tested against versions 10, 12, 14, 16, and 17.
+These binaries are available for Node.js versions 10.x and above. They are currently tested against versions 10 through 18.
 
 ## Building from source
 
@@ -102,6 +102,7 @@ This was originally a fork of [@ronomon/utimes](https://www.npmjs.com/package/@r
 
 - Uses the native binding on linux to fix race conditions
 - Fixed issues with changing specific timestamps on macOS
+- Supports synchronous operations
 - Supports changing timestamps for symbolic links (with [`lutimes`](#symbolic-links))
 - Throws descriptive errors instead of numbers
 - Modern API with both promises and callbacks written in TypeScript

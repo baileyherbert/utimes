@@ -16,7 +16,7 @@ jobs:
   build:
     strategy:
       matrix:
-        node-version: [8, 10, 11, 12, 13, 14, 15, 16]
+        node-version: [8, 10, 11, 12, 13, 14, 15, 16, 18]
         os: [ubuntu-latest, macos-10.15, windows-2019]
 
     name: build ${{ matrix.os }} (v${{ matrix.node-version }})
@@ -73,7 +73,7 @@ jobs:
   build-arm:
     strategy:
       matrix:
-        node-version: [8, 10, 11, 12, 13, 14, 15, 16]
+        node-version: [8, 10, 11, 12, 13, 14, 15, 16, 18]
         arch: [aarch64, armv7]
         distro: [ubuntu18.04]
 

@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-2019, macos-latest]
-        node-version: [10, 16]
+        node-version: [10, 16, 18]
 
     name: ${{ matrix.os }} (v${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
