@@ -52,16 +52,6 @@
 		"ts-jest": "^25.5.1",
 		"typescript": "^3.9.10"
 	},
-	"binary": {
-		"module_name": "utimes",
-		"module_path": "./lib/binding/napi-v{napi_build_version}",
-		"host": "https://github.com/baileyherbert/utimes/releases/download/",
-		"remote_path": "v{version}",
-		"package_name": "{module_name}-v{version}-napi-v{napi_build_version}-{platform}-{arch}.tar.gz",
-		"napi_versions": [
-			3
-		]
-	},
 	"jest": {
 		"preset": "ts-jest",
 		"testEnvironment": "node",
