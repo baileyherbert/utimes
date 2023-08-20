@@ -139,7 +139,7 @@ export function getNow(): UTimestampCollection {
  * @param b
  * @returns
  */
-export function mergeTimes(a: UTimestampCollection, b: UTimestampCollection | number): UTimestampCollection {
+export function mergeTimes(a: UTimestampCollection, b: UTimestampCollection | Date | number): UTimestampCollection {
 	if (typeof b === 'number') {
 		b = {
 			mtime: b,
@@ -148,7 +148,29 @@ export function mergeTimes(a: UTimestampCollection, b: UTimestampCollection | nu
 		};
 	}
 
-	return Object.assign(a, b);
+	if (b instanceof Date) {
+		b = {
+			mtime: b.getTime(),
+			atime: b.getTime(),
+			btime: b.getTime()
+		};
+	}
+
+	const clone = Object.assign({}, b);
+
+	if (clone.atime !== undefined && clone.atime instanceof Date) {
+		clone.atime = clone.atime.getTime();
+	}
+
+	if (clone.mtime !== undefined && clone.mtime instanceof Date) {
+		clone.mtime = clone.mtime.getTime();
+	}
+
+	if (clone.btime !== undefined && clone.btime instanceof Date) {
+		clone.btime = clone.btime.getTime();
+	}
+
+	return Object.assign(a, clone);
 }
 
 /**
@@ -213,7 +235,7 @@ export function invokeSync(filePath: string, times: UTimestampCollection | numbe
  * @param resolveLinks
  * @returns
  */
-export async function testSetTimes(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
+export async function testSetTimes(filePath: string, times: UTimestampCollection | Date | number, resolveLinks = true) {
 	const now = getFileTimes(filePath, resolveLinks);
 	const expected = mergeTimes(now, times);
 
@@ -231,7 +253,7 @@ export async function testSetTimes(filePath: string, times: UTimestampCollection
  * @param resolveLinks
  * @returns
  */
-export async function testSetTimesSync(filePath: string, times: UTimestampCollection | number, resolveLinks = true) {
+export async function testSetTimesSync(filePath: string, times: UTimestampCollection | Date | number, resolveLinks = true) {
 	const now = getFileTimes(filePath, resolveLinks);
 	const expected = mergeTimes(now, times);
 
@@ -340,4 +362,8 @@ export type ResolvedTimestampCollection = {
 	atime: number;
 };
 
-export type UTimestampCollection = Partial<ResolvedTimestampCollection>;
+export type UTimestampCollection = {
+	btime?: Date | number;
+	mtime?: Date | number;
+	atime?: Date | number;
+};

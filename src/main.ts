@@ -305,6 +305,14 @@ function getNormalizedOptions(options: TimeOptions): NormalizedTimeOptions {
 		};
 	}
 
+	if (options instanceof Date) {
+		options = {
+			btime: options.getTime(),
+			mtime: options.getTime(),
+			atime: options.getTime()
+		};
+	}
+
 	if (typeof options === 'undefined' || options === null) {
 		options = {
 			btime: 0,
@@ -317,15 +325,38 @@ function getNormalizedOptions(options: TimeOptions): NormalizedTimeOptions {
 		throw new Error('Options must be an object');
 	}
 
-	assertTimestamp('btime', options.btime);
-	assertTimestamp('mtime', options.mtime);
-	assertTimestamp('atime', options.atime);
+	const btime = getTime('btime', options.btime);
+	const mtime = getTime('mtime', options.mtime);
+	const atime = getTime('atime', options.atime);
+
+	assertTimestamp('btime', btime);
+	assertTimestamp('mtime', mtime);
+	assertTimestamp('atime', atime);
 
 	return {
-		btime: options.btime || 0,
-		mtime: options.mtime || 0,
-		atime: options.atime || 0
+		btime: btime || 0,
+		mtime: mtime || 0,
+		atime: atime || 0
 	};
+}
+
+/**
+ * Converts a time input into a timestamp number.
+ *
+ * @param key
+ * @param input
+ * @returns
+ */
+function getTime(key: string, input?: Date | number): number | undefined {
+	if (typeof input === 'number' || typeof input === 'undefined') {
+		return input;
+	}
+
+	if (typeof input === 'object' && typeof input.getTime === 'function') {
+		return input.getTime();
+	}
+
+	throw new Error(key + ' must be a number or Date');
 }
 
 /**
@@ -445,7 +476,22 @@ function assertTimestamp(key: string, value: any) {
  * Options for choosing which timestamps to set on files. You can supply a single number to set that as the
  * timestamp for all three, or supply individual timestamps within an object.
  */
-export type TimeOptions = number | null | undefined | Partial<NormalizedTimeOptions>;
+export type TimeOptions = Date | number | null | undefined | {
+	/**
+	 * The birth time in milliseconds.
+	 */
+	btime?: Date | number;
+
+	/**
+	 * The modification time in milliseconds.
+	 */
+	mtime?: Date | number;
+
+	/**
+	 * The access time in milliseconds.
+	 */
+	atime?: Date | number;
+};
 
 type Paths = string | string[];
 type Callback = (error?: Error) => void;
