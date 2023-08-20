@@ -1,27 +1,58 @@
-import fs from 'fs';
-import path from 'path';
+let _fsResolved: typeof import('fs');
+let _pathResolved: typeof import('path');
+let _bindingResolved: any;
+
+/**
+ * Resolves the `fs` module and caches it.
+ *
+ * @returns
+ */
+function fs() {
+	if (!_fsResolved) {
+		_fsResolved = require('fs');
+	}
+
+	return _fsResolved;
+}
+
+/**
+ * Resolves the `path` module and caches it.
+ *
+ * @returns
+ */
+function path() {
+	if (!_pathResolved) {
+		_pathResolved = require('path');
+	}
+
+	return _pathResolved;
+}
 
 /**
  * The native addon binding.
  */
-const nativeAddon = (function() {
-	const gyp = require('@mapbox/node-pre-gyp');
-	const packagePath = path.resolve(path.join(__dirname, '../package.json'));
-	const addonPath: string = gyp.find(packagePath);
+function nativeAddon() {
+	if (!_bindingResolved) {
+		const gyp = require('@mapbox/node-pre-gyp');
+		const packagePath = path().resolve(path().join(__dirname, '../package.json'));
+		const addonPath: string = gyp.find(packagePath);
 
-	if (!fs.existsSync(addonPath)) {
-		throw new Error(
-			'Could not find the "utimes.node" file. See: https://github.com/baileyherbert/utimes/issues/12'
-		);
+		if (!fs().existsSync(addonPath)) {
+			throw new Error(
+				'Could not find the "utimes.node" file. See: https://github.com/baileyherbert/utimes/issues/12'
+			);
+		}
+
+		_bindingResolved = require(addonPath);
 	}
 
-	return require(addonPath);
-})();
+	return _bindingResolved;
+};
 
 /**
  * Whether or not the current platform supports the native addon.
  */
-const useNativeAddon = ['darwin', 'win32', 'linux'].indexOf(process.platform) >= 0;
+const useNativeAddon = typeof process !== 'undefined' && ['darwin', 'win32', 'linux'].indexOf(process.platform) >= 0;
 
 /**
  * Updates the timestamps on the given path(s).
@@ -114,6 +145,10 @@ function invokeWrapped(path: Paths, options: TimeOptions, resolveLinks: boolean,
  * @returns
  */
 function invokeUTimes(path: Paths, options: TimeOptions, resolveLinks: boolean, callback: Callback) {
+	if (typeof process === 'undefined') {
+		return;
+	}
+
 	const targets = getNormalizedPaths(path);
 	const times = getNormalizedOptions(options);
 	const flags = getFlags(times);
@@ -138,10 +173,10 @@ function invokeUTimes(path: Paths, options: TimeOptions, resolveLinks: boolean, 
 
 		// Fall back to using `fs.utimes` for other platforms
 		else {
-			fs[resolveLinks ? 'stat' : 'lstat'](target, (statsErr, stats) => {
+			fs()[resolveLinks ? 'stat' : 'lstat'](target, (statsErr, stats) => {
 				if (statsErr) return callback(statsErr);
 
-				fs[resolveLinks ? 'utimes' : 'lutimes'](
+				fs()[resolveLinks ? 'utimes' : 'lutimes'](
 					target,
 					(flags & 4 ? times.atime : stats.atime.getTime()) / 1000,
 					(flags & 2 ? times.mtime : stats.mtime.getTime()) / 1000,
@@ -169,6 +204,10 @@ function invokeUTimes(path: Paths, options: TimeOptions, resolveLinks: boolean, 
  * @returns
  */
 function invokeUTimesSync(path: Paths, options: TimeOptions, resolveLinks: boolean) {
+	if (typeof process === 'undefined') {
+		return;
+	}
+
 	const targets = getNormalizedPaths(path);
 	const times = getNormalizedOptions(options);
 	const flags = getFlags(times);
@@ -188,9 +227,9 @@ function invokeUTimesSync(path: Paths, options: TimeOptions, resolveLinks: boole
 
 		// Fall back to using `fs.utimes` for other platforms
 		else {
-			const stats = fs[resolveLinks ? 'statSync' : 'lstatSync'](target);
+			const stats = fs()[resolveLinks ? 'statSync' : 'lstatSync'](target);
 
-			fs[resolveLinks ? 'utimesSync' : 'lutimesSync'](
+			fs()[resolveLinks ? 'utimesSync' : 'lutimesSync'](
 				target,
 				(flags & 4 ? times.atime : stats.atime.getTime()) / 1000,
 				(flags & 2 ? times.mtime : stats.mtime.getTime()) / 1000
@@ -292,7 +331,7 @@ function getFlags(options: NormalizedTimeOptions): number {
  * @param flags
  */
 function invokeBindingAsync(path: string, times: NormalizedTimeOptions, flags: number, resolveLinks: boolean, callback: Callback): void {
-	nativeAddon.utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks, (result?: Error) => {
+	nativeAddon().utimes(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks, (result?: Error) => {
 		if (typeof result !== 'undefined') {
 			const name = resolveLinks ? 'utimes' : 'lutimes';
 			const message = result.message.trim().replace(/\.$/, '');
@@ -313,7 +352,7 @@ function invokeBindingAsync(path: string, times: NormalizedTimeOptions, flags: n
  */
 function invokeBindingSync(path: string, times: NormalizedTimeOptions, flags: number, resolveLinks: boolean): void {
 	try {
-		nativeAddon.utimesSync(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks);
+		nativeAddon().utimesSync(getPathBuffer(path), flags, times.btime, times.mtime, times.atime, resolveLinks);
 	}
 	catch (error) {
 		const name = resolveLinks ? 'utimes' : 'lutimes';
@@ -329,7 +368,7 @@ function invokeBindingSync(path: string, times: NormalizedTimeOptions, flags: nu
  * @returns
  */
 function getPathBuffer(target: string) {
-	const targetLong = (path as any)._makeLong(target);
+	const targetLong = (path() as any)._makeLong(target);
 	const buffer = Buffer.alloc(Buffer.byteLength(targetLong, 'utf-8') + 1);
 
 	buffer.write(targetLong, 0, buffer.length - 1, 'utf-8');
