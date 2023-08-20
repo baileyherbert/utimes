@@ -55,6 +55,7 @@ jobs:
         npm i copyfiles@2.4.0 --ignore-scripts
 
     - name: Build artifact (ia32)
+      if: matrix.os != 'macos-latest'
       run: |
         npm run build --target_arch=ia32
         npx copyfiles copyfiles -f ./build/stage/**/*.tar.gz packages

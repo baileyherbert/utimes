@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         node-version: [10.x]
-        os: [ubuntu-latest, macos-11, windows-2019]
+        os: [ubuntu-latest, macos-latest, windows-2019]
 
     name: build ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -41,6 +41,7 @@ jobs:
       run: npm ci --ignore-scripts
 
     - name: Build artifact (ia32)
+      if: matrix.os != 'macos-latest'
       run: npm run build --target_arch=ia32
 
     - name: Build artifact (x64)

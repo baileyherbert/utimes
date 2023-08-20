@@ -47,6 +47,7 @@ jobs:
       run: npm ci --ignore-scripts
 
     - name: Build artifact (ia32)
+      if: matrix.os != 'macos-latest'
       run: npm run build --target_arch=ia32
 
     - name: Build artifact (x64)
