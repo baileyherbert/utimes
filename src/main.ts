@@ -166,7 +166,7 @@ function invokeWrapped(path: Paths, options: TimeOptions, resolveLinks: boolean,
  */
 function invokeUTimes(path: Paths, options: TimeOptions, resolveLinks: boolean, callback: Callback) {
 	if (typeof process === 'undefined') {
-		return;
+		return callback();
 	}
 
 	const targets = getNormalizedPaths(path);
