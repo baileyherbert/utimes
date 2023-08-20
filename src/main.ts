@@ -3,13 +3,21 @@ let _pathResolved: typeof import('path');
 let _bindingResolved: any;
 
 /**
+ * Wrapper on the `require` function to trick bundlers and avoid including mapbox dependencies.
+ *
+ * @param name
+ * @returns
+ */
+const __require = (name: string) => require(name);
+
+/**
  * Resolves the `fs` module and caches it.
  *
  * @returns
  */
 function fs() {
 	if (!_fsResolved) {
-		_fsResolved = require('fs');
+		_fsResolved = __require('fs');
 	}
 
 	return _fsResolved;
@@ -22,7 +30,7 @@ function fs() {
  */
 function path() {
 	if (!_pathResolved) {
-		_pathResolved = require('path');
+		_pathResolved = __require('path');
 	}
 
 	return _pathResolved;
@@ -33,7 +41,7 @@ function path() {
  */
 function nativeAddon() {
 	if (!_bindingResolved) {
-		const gyp = require('@mapbox/node-pre-gyp');
+		const gyp = __require('@mapbox/node-pre-gyp');
 		const packagePath = path().resolve(path().join(__dirname, '../package.json'));
 		const addonPath: string = gyp.find(packagePath);
 
@@ -43,7 +51,7 @@ function nativeAddon() {
 			);
 		}
 
-		_bindingResolved = require(addonPath);
+		_bindingResolved = __require(addonPath);
 	}
 
 	return _bindingResolved;
