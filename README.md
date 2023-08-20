@@ -42,8 +42,7 @@ await lutimes('/path/to/symlink', {
 
 ### Callbacks
 
-You can provide a function as the last argument to activate callback mode. The first parameter of the callback will be the error if applicable (or `undefined` otherwise). Starting with version 5.0.0 the functions no longer return promises when using callbacks, so you'll need to choose between one or the other.
-
+You can provide a function as the last argument to activate callback mode. The first parameter of the callback will be the error if applicable (or `undefined` otherwise).
 If you're looking for maximum performance, using callbacks is recommended to avoid the slight delay in promise resolution.
 
 ```ts
@@ -65,7 +64,7 @@ lutimesSync('/path/to/symlink', 447775200000);
 
 ### Errors
 
-Starting with version 5.0.0, this package throws descriptive and user-friendly error messages. Please note that these messages come from the operating system and will not be consistent between systems. Here's an example:
+This package throws descriptive and user-friendly error messages. These messages come from the operating system and may not be consistent between platforms. Here's an example:
 
 ```ts
 Error {
@@ -75,21 +74,17 @@ Error {
 
 ## Prebuilt binaries
 
-Starting with version 5.0.0, prebuilt binaries are available for download on the [releases page](https://github.com/baileyherbert/utimes/releases). When installing the package, it will attempt to download a prebuilt binary for your system if available, and will fall back to building from source otherwise.
+This package uses C++ bindings that must be built for the current operating system and architecture. Because build tools are often not available, prebuilt binaries are provided for common platforms, and will be downloaded where applicable during package installation. These binaries are public and can be found on the [releases page](https://github.com/baileyherbert/utimes/releases).
 
-Refer to the following table to see the minimum `utimes` version for prebuilt binaries:
+The latest version of `utimes` provides the following prebuilt binaries:
 
-|            | x86   | x64   | armv7 | arm64 |
-|------------|-------|-------|-------|-------|
-| **win32**  | 4.0.3 | 4.0.3 | -     | -     |
-| **darwin** | 4.0.3 | 4.0.3 | -     | -     |
-| **linux**  | 4.0.3 | 4.0.3 | 5.0.0 | 5.0.0 |
+|            | x86 | x64 | armv7 | arm64 |
+| ---------- | --- | --- | ----- | ----- |
+| **win32**  | ✅  | ✅  | -     | -     |
+| **darwin** | ✅  | ✅  | -     | -     |
+| **linux**  | ✅  | ✅  | ✅    | ✅    |
 
-These binaries are available for Node.js versions 10.x and above. They are currently tested against versions 10 through 18.
-
-## Building from source
-
-For platforms which do not have prebuilt binaries available, you will need to build from source. Please note that you must install `node-gyp` globally on your system, along with the appropriate build tools, before building this package.
+If the native binding cannot be downloaded nor built, the package will fall back to using the built-in `fs` functions. This means `btime` will not be modifiable on any platform, and performance will decrease moderately.
 
 ## Caveats
 
@@ -100,11 +95,11 @@ For platforms which do not have prebuilt binaries available, you will need to bu
 
 This was originally a fork of [@ronomon/utimes](https://www.npmjs.com/package/@ronomon/utimes) with cross-platform improvements by [Jule-](https://github.com/Jule-). It's not backwards compatible. For those who are migrating from that package, here are the notable changes:
 
-- Uses the native binding on linux to fix race conditions
-- Fixed issues with changing specific timestamps on macOS
+- Provides a native binding for all platforms
+- Provides prebuilt binaries to fix common installation issues
 - Supports synchronous operations
 - Supports changing timestamps for symbolic links (with [`lutimes`](#symbolic-links))
-- Throws descriptive errors instead of numbers
+- Throws descriptive error messages
 - Modern API with both promises and callbacks written in TypeScript
 
 Huge thanks to all of the [contributors](https://github.com/baileyherbert/utimes/graphs/contributors) who helped with maintaining and improving this package!
