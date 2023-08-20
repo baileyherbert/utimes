@@ -40,15 +40,13 @@ function path() {
  * The native addon binding.
  */
 function nativeAddon() {
-	if (!_bindingResolved) {
+	if (_bindingResolved === undefined) {
 		const gyp = __require('@mapbox/node-pre-gyp');
 		const packagePath = path().resolve(path().join(__dirname, '../package.json'));
 		const addonPath: string = gyp.find(packagePath);
 
 		if (!fs().existsSync(addonPath)) {
-			throw new Error(
-				'Could not find the "utimes.node" file. See: https://github.com/baileyherbert/utimes/issues/12'
-			);
+			return _bindingResolved = null;
 		}
 
 		_bindingResolved = __require(addonPath);
@@ -60,7 +58,21 @@ function nativeAddon() {
 /**
  * Whether or not the current platform supports the native addon.
  */
-const useNativeAddon = typeof process !== 'undefined' && ['darwin', 'win32', 'linux'].indexOf(process.platform) >= 0;
+function useNativeAddon() {
+	if (typeof process !== 'undefined' && ['darwin', 'win32', 'linux'].indexOf(process.platform) >= 0) {
+		if (_bindingResolved === undefined) {
+			nativeAddon();
+		}
+
+		if (_bindingResolved === null) {
+			return false;
+		}
+
+		return true;
+	}
+
+	return false;
+}
 
 /**
  * Updates the timestamps on the given path(s).
@@ -169,7 +181,7 @@ function invokeUTimes(path: Paths, options: TimeOptions, resolveLinks: boolean, 
 		}
 
 		// Invoke the native addon on supported platforms
-		if (useNativeAddon) {
+		if (useNativeAddon()) {
 			invokeBindingAsync(
 				target,
 				times,
@@ -228,7 +240,7 @@ function invokeUTimesSync(path: Paths, options: TimeOptions, resolveLinks: boole
 		}
 
 		// Invoke the native addon on supported platforms
-		if (useNativeAddon) {
+		if (useNativeAddon()) {
 			invokeBindingSync(target, times, flags, resolveLinks);
 			invokeAtIndex(index + 1);
 		}
