@@ -13,6 +13,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-2019, macos-latest, macos-13]
         node-version: [10, 18]
+        exclude:
+          - os: macos-13
+            node-version: 10
 
     name: ${{ matrix.os }} (v${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
