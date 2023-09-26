@@ -60,7 +60,7 @@ void set_utimes(
 		int err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), resolveLinks ? 0 : FSOPT_NOFOLLOW);
 
 		if (err == 0) {
-			if (sizeof(attrBuf) == attrBuf.ssize) {
+			if (sizeof(attrBuf) != attrBuf.ssize) {
 				throw std::string("attrBuf size assertion failed");
 			}
 
