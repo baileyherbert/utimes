@@ -60,7 +60,10 @@ void set_utimes(
 		int err = getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), resolveLinks ? 0 : FSOPT_NOFOLLOW);
 
 		if (err == 0) {
-			assert(sizeof(attrBuf) == attrBuf.ssize);
+			if (sizeof(attrBuf) != attrBuf.ssize) {
+				throw std::string("attrBuf size assertion failed");
+			}
+
 			memcpy(&utimes, &(attrBuf.created), sizeof(struct timespec) * 3);
 
 			if (flags & 1) set_timespec(btime, &(utimes[0]));
